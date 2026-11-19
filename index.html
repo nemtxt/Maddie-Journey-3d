@@ -7,33 +7,11 @@
   <meta name="description" content="Maddie Journey — explore a miniature animated 3D world connected to 51 fictional employee profiles and 86 people and culture report routes.">
   <title>Maddie Journey — Eight Interactive Division Districts</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=1.3.0">
+  <link rel="stylesheet" href="styles.css?v=1.4.0">
 </head>
 <body class="intro-active">
   <a class="skip-link" href="#main">Skip to main content</a>
   <div class="shell" id="app">
-    <header class="topbar">
-      <a class="brand" href="#overview" aria-label="Maddie Journey World home">
-        <span class="brand-mark" aria-hidden="true"><span class="brand-hill"></span><span class="brand-sun"></span></span>
-        <span class="brand-name">maddie<span>journey</span><small>THE WORLD OF PEOPLE</small></span>
-      </a>
-      <nav class="topnav" aria-label="Primary navigation">
-        <button type="button" class="nav-link is-active" data-view="world">Explore world</button>
-        <button type="button" class="nav-link" data-view="dashboard">Overview</button>
-        <button type="button" class="nav-link" data-view="people">People directory</button>
-        <button type="button" class="nav-link" data-view="journey">The journey</button>
-      </nav>
-      <div class="header-actions">
-        <span class="demo-chip"><span class="status-dot"></span> FICTIONAL DEMO</span>
-        <button type="button" class="icon-btn" id="search-toggle" aria-label="Search employees and dashboards" title="Search (Ctrl+K)">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg>
-        </button>
-        <button type="button" class="icon-btn" id="motion-toggle" aria-label="Turn animation on or off" aria-pressed="true" title="Toggle ambient animation">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6v12l10-6z"></path><path d="M18 7v10"></path></svg>
-        </button>
-      </div>
-    </header>
-
     <main id="main">
       <section class="world-stage" id="world-stage" aria-label="Interactive miniature 3D world">
         <canvas id="world-canvas" aria-label="3D miniature island with eight company division landmarks; use labeled markers or the division selector to navigate"></canvas>
@@ -42,6 +20,49 @@
           <div class="fallback-land"><span class="fallback-mountain a"></span><span class="fallback-mountain b"></span><span class="fallback-mountain c"></span><span class="fallback-path"></span></div>
         </div>
         <div class="landmark-labels" id="landmark-labels" aria-label="Interactive world landmarks"></div>
+
+        <!-- Lightweight world HUD, not a page-wide header or bottom navigation. -->
+        <div class="world-hud" id="world-hud" aria-label="World tools">
+          <div class="hud-identity" aria-label="Maddie Journey 3D"><span class="hud-symbol" aria-hidden="true">✳</span><span><strong>Maddie Journey</strong><small>THE WORLD OF PEOPLE</small></span></div>
+          <div class="hud-actions">
+            <button type="button" id="hud-search" class="hud-control" aria-label="Search employees, divisions and reports" title="Search (Ctrl+K)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span>Search</span>
+            </button>
+            <button type="button" id="hud-reports" class="hud-control" aria-label="Open reporting dashboard" title="View the nine monitoring workspaces">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg><span>Reports</span>
+            </button>
+            <button type="button" id="hud-audio" class="hud-control audio-control" aria-pressed="false" aria-label="Enable original ambient music and sound effects" title="Original soundtrack and sound effects, off by default">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9a5 5 0 0 1 0 6"/><path d="M20 6a9 9 0 0 1 0 12"/></svg><span id="hud-audio-label">Sound off</span>
+            </button>
+            <button type="button" id="hud-motion" class="hud-control hud-motion" aria-pressed="true" aria-label="Toggle ambient animation" title="Toggle environmental motion">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6v12l10-6z"/><path d="M19 6v12"/></svg><span>Motion</span>
+            </button>
+          </div>
+        </div>
+
+        <section class="division-headline" id="division-headline" hidden aria-live="polite" aria-labelledby="division-title">
+          <div class="division-heading-eyebrow"><span id="division-number">01 / 08</span><span>EXPLORE THE DIVISIONS</span></div>
+          <h2 id="division-title">HR</h2>
+          <div class="division-headline-rule"></div>
+          <p id="division-subtitle">People &amp; Culture Hub</p>
+          <p id="division-summary">Discover the places and people behind each division.</p>
+          <div class="division-headline-actions">
+            <button class="headline-primary" type="button" id="division-details" aria-expanded="false" aria-controls="focus-panel">Discover this division <span aria-hidden="true">↗</span></button>
+            <button class="headline-quiet" type="button" id="division-return">All divisions <span aria-hidden="true">↶</span></button>
+          </div>
+        </section>
+
+        <div class="division-dock" id="division-dock">
+          <button type="button" id="hud-divisions" class="division-dock-trigger" aria-expanded="false" aria-controls="division-menu"><span class="dock-mark">✳</span><span>Explore divisions</span><small>08 locations</small><span aria-hidden="true">⌃</span></button>
+          <nav id="division-menu" class="division-menu" aria-label="Company division destinations" hidden>
+            <div class="division-menu-header"><span>DISCOVER THE ISLAND</span><button type="button" id="division-menu-close" aria-label="Close division menu">×</button></div>
+            <div id="division-menu-list" class="division-menu-list"></div>
+            <button type="button" class="division-menu-tour" id="division-tour">Guided world journey <span aria-hidden="true">↗</span></button>
+          </nav>
+        </div>
+
+        <div class="world-atmosphere" aria-hidden="true"><span class="atmo-light atmo-a"></span><span class="atmo-light atmo-b"></span><span class="world-film-grain"></span></div>
+
 
         <!-- One continuous Three.js world: the welcome screen overlays the sky camera before descent. -->
         <section class="sky-intro" id="sky-intro" aria-labelledby="intro-title">
@@ -62,6 +83,7 @@
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
             </button>
             <div class="intro-status" id="intro-status" role="status" aria-live="polite">Press Start to explore the world.</div>
+            <button type="button" class="intro-audio-choice" id="intro-audio" aria-pressed="false" aria-label="Enable original soundtrack">♫ <span id="intro-audio-label">Enable ambient sound</span></button>
           </div>
           <button type="button" class="intro-skip" id="intro-skip">Skip intro <span aria-hidden="true">↗</span></button>
           <div class="intro-bottom" aria-hidden="true"><span>PEOPLE · PURPOSE · PROGRESS</span><span>SCROLL THROUGH THE SKY AND DISCOVER MORE</span><span>EST. 2026</span></div>
@@ -107,24 +129,17 @@
         <button type="button" class="fallback-button" id="world-mode" aria-pressed="false">2D view</button>
       </section>
 
-      <section class="bottom-bar" aria-label="World exploration routes">
-        <div class="route-intro"><span class="route-tiny-label">EXPLORE EIGHT DIVISIONS</span><strong>Where to next?</strong></div>
-        <div class="route-scroll" id="district-strip" role="navigation" aria-label="Choose a world destination"></div>
-        <button type="button" class="route-end" id="all-reports">All reports <span aria-hidden="true">↗</span></button>
-      </section>
-
       <section class="content-area" id="content-area" aria-labelledby="content-heading" hidden>
         <div class="content-inner">
           <div class="content-header">
             <div><span class="eyebrow dark">MADDIE WORLD / READ-ONLY MONITORING</span><h2 id="content-heading">Explore the data</h2><p id="content-subtitle">Discover the stories behind the landscape.</p></div>
-            <button type="button" class="soft-btn" id="back-to-world">Return to 3D world ↗</button>
+            <div class="content-actions"><button type="button" class="soft-btn" id="back-to-world">Return to 3D world ↗</button><button type="button" class="soft-btn" id="content-search">Search records</button><button type="button" class="soft-btn" id="content-overview">All workspaces</button></div>
           </div>
           <div id="content-body"></div>
         </div>
       </section>
     </main>
 
-    <footer class="site-foot"><span>© Maddie Journey — A people-first experience</span><span>8 division districts · 9 report workspaces · 51 fictional profiles · 86 routes</span><a href="https://github.com/nemtxt/Maddie-Journey-3d" target="_blank" rel="noopener noreferrer">GitHub ↗</a></footer>
   </div>
 
   <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
@@ -201,6 +216,6 @@
   })();
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script type="module" src="app.js?v=1.3.0"></script>
+  <script type="module" src="app.js?v=1.4.0"></script>
 </body>
 </html>
