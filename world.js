@@ -196,6 +196,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   // Distinct original project assets for eight actual company divisions.
   const accentColors=districts.map(d=>d.color);
   const adventureAssets=createAdventureAssets(THREE,world,districts,{lowQuality});
+  canvas.dataset.adventureOutposts=String(adventureAssets.outpostCount);
   const anchors=[],animatedDistrictAssets=[],districtModels=new Map();
   districts.forEach((d,i)=>{
     const district=buildDivisionDistrict(THREE,world,d);
