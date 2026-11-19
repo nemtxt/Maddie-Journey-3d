@@ -107,6 +107,7 @@ function setDetails(open){
  document.body.classList.toggle('details-open',on);
  $('division-details').setAttribute('aria-expanded',String(on));
  $('focus-panel').setAttribute('aria-hidden',String(!on));
+ $('focus-panel').hidden=!on;
  if(on)$('panel-dismiss').focus({preventScroll:true});
 }
 function closeDivisionMenu(){
