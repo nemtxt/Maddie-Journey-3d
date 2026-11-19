@@ -6,6 +6,6 @@
   "description": "Read-only 3D fictional journey prototype",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check app.js && node --check world.js && node --check divisions.js && node --check world-assets.js && node --check soundscape.js"
+    "check": "node --check app.js && node --check world.js && node --check divisions.js && node --check world-assets.js && node --check dream-details.js && node --check soundscape.js"
   }
 }
