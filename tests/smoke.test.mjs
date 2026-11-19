@@ -125,7 +125,7 @@ test('project assets and forest are procedural, weather animated and licensed wi
  assert.ok(assets.includes("new THREE.InstancedMesh"));
  assert.ok(assets.includes("uForestWind"));
  assert.ok(world.includes("animatedForest.update(time,animate)"));
- assert.ok(world.includes("shadowMap.enabled=true"));
+ assert.ok(world.includes("shadowMap.enabled=!lowQuality"));
  assert.ok(world.includes("MeshPhysicalMaterial"));
  assert.ok(world.includes("waterRipples.forEach"));
  assert.ok(app.includes("DISTRICTS=DIVISIONS"));
