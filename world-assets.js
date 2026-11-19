@@ -219,3 +219,73 @@ export function enhanceTerrain(THREE,root,districts){
   }
   return all;
 }
+
+/**
+ * Animated woodland using GPU instancing and subtle vertex-level wind.
+ * Height / color variation gives more natural silhouettes without per-tree draw calls.
+ */
+export function enhanceForest(THREE,root,districts,{mobile=false}={}){
+  let seed=312893;
+  const rand=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+  const count=mobile?68:146;
+  const positions=[];
+  let attempts=0;
+  while(positions.length<count&&attempts<count*35){
+    attempts++;
+    const x=(rand()-.5)*91,z=(rand()-.5)*59;
+    if(x*x/(48*48)+z*z/(32*32)>.89)continue;
+    if(districts.some(d=>Math.hypot(d.x-x,d.z-z)<8.8))continue;
+    if(x>0&&x<23&&z>-10&&z<10)continue;
+    const scale=.6+rand()*.85,shape=rand();
+    positions.push({x,z,s:scale,shape});
+  }
+  const windClock={value:0};
+  function windyMaterial(hex){
+    const material=new THREE.MeshStandardMaterial({color:hex,roughness:.97,metalness:0,flatShading:true});
+    material.onBeforeCompile=shader=>{
+      shader.uniforms.uForestWind=windClock;
+      shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nuniform float uForestWind;');
+      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+        #ifdef USE_INSTANCING
+          float windOffset = uForestWind*.8 + instanceMatrix[3].x*.13 + instanceMatrix[3].z*.21;
+          transformed.x += sin(windOffset) * .07 * max(transformed.y,0.);
+          transformed.z += cos(windOffset*.63) * .035 * max(transformed.y,0.);
+        #endif
+      `);
+    };
+    return material;
+  }
+  const trunkMaterial=new THREE.MeshStandardMaterial({color:'#7f6855',roughness:1,flatShading:true});
+  const evergreen=windyMaterial('#548c70'),juniper=windyMaterial('#79a386'),broadleaf=windyMaterial('#90b87e');
+  const trunkGeometry=new THREE.CylinderGeometry(.19,.30,2.8,5);
+  const pineGeometry=new THREE.ConeGeometry(2.0,4.6,6);
+  const leafGeometry=new THREE.IcosahedronGeometry(1.95,1);
+  const trunks=new THREE.InstancedMesh(trunkGeometry,trunkMaterial,positions.length);
+  const pines=new THREE.InstancedMesh(pineGeometry,evergreen,positions.length);
+  const broad=new THREE.InstancedMesh(leafGeometry,broadleaf,positions.length);
+  const secondary=new THREE.InstancedMesh(pineGeometry,juniper,positions.length);
+  const tmp=new THREE.Object3D();
+  let pineCount=0,broadCount=0,secondCount=0;
+  positions.forEach((p,i)=>{
+    const {x,z,s,shape}=p;
+    tmp.position.set(x,2.0+1.4*s,z);tmp.rotation.y=rand()*6.28;tmp.scale.setScalar(s);tmp.updateMatrix();
+    trunks.setMatrixAt(i,tmp.matrix);
+    if(shape<.56){
+      tmp.position.set(x,4.4*s+1.9,z);tmp.scale.setScalar(s);tmp.updateMatrix();pines.setMatrixAt(pineCount++,tmp.matrix);
+      tmp.position.set(x,5.6*s+1.9,z);tmp.scale.setScalar(s*.68);tmp.updateMatrix();secondary.setMatrixAt(secondCount++,tmp.matrix);
+    }else{
+      tmp.position.set(x,4.6*s+1.9,z);tmp.scale.set(s*1.18,s*.9,s*1.1);tmp.updateMatrix();broad.setMatrixAt(broadCount++,tmp.matrix);
+    }
+  });
+  pines.count=pineCount;broad.count=broadCount;secondary.count=secondCount;
+  for(const im of [trunks,pines,broad,secondary]){
+    im.instanceMatrix.needsUpdate=true;
+    im.castShadow=!mobile;im.receiveShadow=false;im.frustumCulled=false;
+    root.add(im);
+  }
+  return {
+    count:positions.length,
+    update(time,enabled){if(enabled)windClock.value=time*.001;},
+    dispose(){for(const im of [trunks,pines,broad,secondary])im.geometry.dispose();}
+  };
+}
