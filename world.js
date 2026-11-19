@@ -1,6 +1,7 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 import {buildDivisionDistrict,enhanceTerrain,enhanceForest} from './world-assets.js?v=1.3.0';
 import {buildStoryEnvironment} from './dream-details.js?v=1.5.0';
+import {createAdventureAssets} from './adventure-assets.js?v=1.6.0';
 
 /** A lightweight bespoke Three.js diorama, no downloadable models or premium assets. */
 export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{},motionEnabled=true,intro=true}) {
@@ -194,6 +195,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   }
   // Distinct original project assets for eight actual company divisions.
   const accentColors=districts.map(d=>d.color);
+  const adventureAssets=createAdventureAssets(THREE,world,districts,{lowQuality});
   const anchors=[],animatedDistrictAssets=[],districtModels=new Map();
   districts.forEach((d,i)=>{
     const district=buildDivisionDistrict(THREE,world,d);
@@ -278,13 +280,13 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   function fitRadius(){return Math.max(107,100/(2*Math.tan(39*Math.PI/360)*camera.aspect));}
   function focus(id){const d=districts.find(item=>item.id===id);if(!d)return;
     districtGlow.position.set(d.x,16,d.z);districtGlow.color.set(d.color);districtGlow.intensity=lowQuality?.2:1.15;
-    active=id;orbit.target.set(d.x,4,d.z);orbit.rDesired=Math.max(70,fitRadius()*.78);orbit.thetaDesired=.34;orbit.phiDesired=1;
+    active=id;adventureAssets.setActive(id);orbit.target.set(d.x,4,d.z);orbit.rDesired=Math.max(70,fitRadius()*.78);orbit.thetaDesired=.34;orbit.phiDesired=1;
     nameNodes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===id)));
   }
-  function reset(){touring=false;active=null;districtGlow.intensity=0;orbit.target.set(overviewX,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
+  function reset(){touring=false;active=null;adventureAssets.setActive(null);districtGlow.intensity=0;orbit.target.set(overviewX,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
     nameNodes.forEach(b=>b.setAttribute('aria-pressed','false'));}
   function zoom(delta){const fit=fitRadius();orbit.rDesired=THREE.MathUtils.clamp(orbit.rDesired+delta,Math.max(49,fit*.58),Math.max(146,fit*1.55));}
-  function startTour(){tourT=0;tourIndex=-1;touring=true;active=null;}
+  function startTour(){tourT=0;tourIndex=-1;touring=true;active=null;adventureAssets.setActive(null);}
   function stopTour(){touring=false;}
   function setMotion(enabled){animate=Boolean(enabled);if(!animate)stopTour();}
   const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
@@ -340,6 +342,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
       camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
     }
     animatedForest.update(time,animate);
+    adventureAssets.update(time,animate);
     storyDetails.update(time,animate);
     if(animate){motes.rotation.y=Math.sin(time*.000085)*.015;motes.position.y=Math.sin(time*.0002)*.5;}
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
@@ -357,5 +360,5 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   function visibility(){run=!document.hidden;last=performance.now();}
   document.addEventListener('visibilitychange',visibility);
   raf=requestAnimationFrame(tick);
-  return {focus,reset,zoom,startTour,stopTour,setMotion,setIntroProgress,endIntro,detailCounts:storyDetails.counts,dispose(){storyDetails.dispose();disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
+  return {focus,reset,zoom,startTour,stopTour,setMotion,setIntroProgress,endIntro,detailCounts:{...storyDetails.counts,adventureOutposts:adventureAssets.outpostCount},dispose(){adventureAssets.dispose();storyDetails.dispose();disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
 }
