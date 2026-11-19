@@ -1,6 +1,6 @@
 # Maddie Journey — Interactive 3D World
 
-**V1.4 · Immersive World & Original Soundscape · November 2026**
+**V1.5 · Dream Factory-inspired Scenic World · November 2026**
 
 An Awwwards-inspired, interactive miniature world for exploring the Maddie Journey People & Culture reporting environment. This project is deliberately **separate from** [the original fictional prototype](https://github.com/nemtxt/Maddie-Journey-Prototype), which has not been changed.
 
@@ -13,6 +13,20 @@ The default root / `#overview` opens a full-screen, atmospheric sky with animate
 **Accessibility and graceful fallbacks:** Skip intro is always available; reduced-motion visitors transition directly to the world; the camera descent uses requestAnimationFrame if GSAP fails to load; an existing 2D fallback is shown if WebGL fails. Deep links into employee and report routes bypass the entrance. Controls remain keyboard navigable.
 
 **Dependencies:** Three.js 0.161.0 and GSAP 3.12.5 are served from jsDelivr; no account, billing, server-side rendering or paid animation plugins are required. A network connection is needed to load these libraries.
+
+## V1.5 — Floating island environment detail
+
+**Visual reference:** [HKDI Dream Factory](https://hkdi.edu.hk/dreamfactory/) and its [Awwwards project showcase](https://www.awwwards.com/sites/hkdi-dream-factory). We studied its composition and interactive design principles: a visible geological underside, miniature educational and exploratory objects, colorful architecture, environmental energy features, suspended cloud elements, and a waterfall that leaves the island edge. **No HKDI models, graphics, sounds, branding, or code were copied.**
+
+**Original additions in `dream-details.js`:**
+- Sculpted irregular rock-strata skin and scattered faceted geological fragments around the underside of the floating landmass.
+- A river extension leading over the island rim to a long, softly animated waterfall (transparent GLSL water ribbons and moving spray).
+- Sustainable-world props: a rotating wind turbine near Revenue Outlook and a four-panel solar array near IT.
+- A miniature explorer telescope near Media, pastel tube sculptures around Design, and subtle warm route lanterns linking division destinations.
+- Floating color balloons and an original abstract cloud sculpture to increase spatial depth.
+- Environmental motion driven by the existing scene clock and automatically reduced when motion is disabled; lower object counts on mobile or software WebGL.
+
+**Rendering / performance:** Still one Three.js scene, one renderer, all eight division districts and nine reporting workspaces unchanged. Four short geological bands and sparse instanced rock geometry provide more visual depth without relying on external GLB downloads or subscription services. Reduced motion and 2D fallback are preserved.
 
 ## V1.4 — Full-viewport world and original soundscape
 
