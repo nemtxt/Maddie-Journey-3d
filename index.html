@@ -158,7 +158,7 @@
       var world=document.getElementById('world-fallback');
       if(stage)stage.classList.add('is-2d');
       if(world)world.hidden=false;
-      if(!handlers){
+      if(!sceneReady){
         var panel=document.getElementById('panel-content');
         if(panel){
           panel.replaceChildren();
