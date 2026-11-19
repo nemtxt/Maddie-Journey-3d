@@ -1,0 +1,11 @@
+{
+  "name": "maddie-journey-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only 3D fictional journey prototype",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check app.js && node --check world.js"
+  }
+}
