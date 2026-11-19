@@ -24,7 +24,7 @@ let employees=[];
 let divisionSummaries=[];
 let manifest={workspaces:[]},world=null,force2D=false,motionEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let peopleSearch='',peopleDivision='all',lastSearchQuery='',currentView='world',selectedDistrict=null;
-let introDone=false,introRunning=false,introTween=null,introFrame=0,sceneReady=false;
+let introDone=Boolean(window.MADDIE_INTRO?.dismissed),introRunning=false,introTween=null,introFrame=0,sceneReady=false;
 const reduceMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const showIntroOnEntry=()=>!location.hash||['#overview','#world'].includes(location.hash);
 function finishIntro({focus=true}={}){
@@ -53,6 +53,7 @@ function startIntro(){
   introTween.to('#intro-content',{opacity:0,y:-28,duration:.8,ease:'power2.inOut'},0)
    .to('#intro-bottom',{opacity:0,duration:.6},0)
    .to('#intro-atmosphere',{opacity:.08,scale:1.28,duration:4.4,ease:'power1.inOut'},.7)
+   .to('#intro-sky-veil',{opacity:0,duration:3.1,ease:'power2.inOut'},1.0)
    .to('#intro-sunlight',{opacity:0,duration:3.1,ease:'power2.in'},1.25)
    .to(progress,{value:1,duration:5.3,ease:'power2.inOut',onUpdate:()=>world?.setIntroProgress(progress.value)},.25)
    .to('#sky-intro',{opacity:0,duration:1.1,ease:'power2.inOut'},4.45);
@@ -64,6 +65,7 @@ function startIntro(){
   function step(now){if(introDone)return;const t=Math.min(1,(now-started)/duration);
     const eased=t*t*(3-2*t);world?.setIntroProgress(eased);
     $('intro-atmosphere').style.opacity=String(1-eased);
+    $('intro-sky-veil').style.opacity=String(1-eased);
     if(t<1)introFrame=requestAnimationFrame(step);else finishIntro();}
   introFrame=requestAnimationFrame(step);
  }
@@ -261,8 +263,7 @@ function globalSearchResults(q){
 function openSearch(){const d=$('search-dialog');d.showModal();$('global-search').focus();$('search-results').innerHTML=globalSearchResults($('global-search').value);}
 function wireEvents(){
  document.querySelectorAll('.nav-link').forEach(b=>b.addEventListener('click',()=>{location.hash=b.dataset.view==='world'?'#overview':'#'+b.dataset.view;}));
- $('intro-start').addEventListener('click',startIntro);
- $('intro-skip').addEventListener('click',()=>finishIntro());
+ window.MADDIE_INTRO?.register(startIntro,()=>finishIntro({focus:false}));
  $('tour-start').addEventListener('click',()=>{if(force2D)toggleMode();if(world)world.startTour();else location.hash='#journey';});
  $('open-map').addEventListener('click',()=>$('district-strip').scrollIntoView({behavior:motionEnabled?'smooth':'instant'}));
  $('all-reports').addEventListener('click',()=>location.hash='#dashboard');
@@ -299,14 +300,16 @@ async function start(){
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
  renderDistrictStrip();fillSummary();
  const labelsRoot=$('landmark-labels');try{
-  const mod=await import('./world.js');
-  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()&&!introDone});
+  const mod=await import('./world.js?v=1.2.1');
+  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
  sceneReady=true;
  $('intro-start').disabled=false;
- $('intro-status').textContent=world?'An immersive world is ready to explore.':'A 2D journey is available on this device.';
- if(!showIntroOnEntry())finishIntro({focus:false});
+ $('intro-status').textContent=world?'Your 3D world is ready.':'A 2D journey is available on this device.';
+ if(window.MADDIE_INTRO?.dismissed||!showIntroOnEntry())finishIntro({focus:false});
+ else if(world)window.MADDIE_INTRO?.ready();
+ else window.MADDIE_INTRO?.fail();
  routeTo(location.hash);
  if(!employees.length)console.warn('Display-only fictional roster unavailable. Check data/fictional-snapshot.json.');
 }
