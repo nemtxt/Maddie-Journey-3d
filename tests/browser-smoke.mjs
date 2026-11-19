@@ -31,6 +31,8 @@ try{
  assert.equal(await page.locator('.bottom-bar').count(),0,'Bottom route strip removed');
  assert.equal(await page.locator('.site-foot').count(),0,'Footer removed from immersive world');
  assert.equal(await page.locator('.world-label').count(),8);
+ await page.waitForFunction(()=>document.querySelector('#world-canvas')?.dataset.adventureOutposts==='8',null,{timeout:15000});
+ assert.equal(await page.locator('#world-canvas').getAttribute('data-adventure-outposts'),'8');
  await page.waitForFunction(()=>document.querySelector('#world-canvas')?.dataset.storyEnvironment==='v1.5',null,{timeout:15000});
  const scenic=await page.locator('#world-canvas').evaluate(el=>({
   version:el.dataset.storyEnvironment,
