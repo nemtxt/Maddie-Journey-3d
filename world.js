@@ -168,6 +168,9 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   routePoints.splice(6,0,new THREE.Vector3(36,2.35,1));
   const curve=new THREE.CatmullRomCurve3(routePoints,false,'centripetal',.5);
   const storyDetails=buildStoryEnvironment(THREE,world,{districts,route:curve,lowQuality});
+  canvas.dataset.storyEnvironment='v1.5';
+  canvas.dataset.geologicalLayers=String(storyDetails.counts.geologicalLayers);
+  canvas.dataset.storyQuality=lowQuality?'lite':'enhanced';
   const routeBase=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.91,10,false),soil);world.add(routeBase);
   const routePaving=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.70,10,false),sand);world.add(routePaving);
   const routeLit=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.08,5,false),gold);world.add(routeLit);
