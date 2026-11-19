@@ -133,3 +133,30 @@ test('project assets and forest are procedural, weather animated and licensed wi
  assert.ok(app.includes("divisionForWorkspace"));
  assert.ok(!assets.includes('https://'));
 });
+
+test('immersive world has no old top or bottom page navigation',()=>{
+ const html=read('index.html'),css=read('styles.css');
+ assert.ok(!html.includes('class="topbar"'));
+ assert.ok(!html.includes('class="bottom-bar"'));
+ assert.ok(!html.includes('class="site-foot"'));
+ for(const id of ['world-hud','hud-divisions','division-headline','division-title','division-details','division-menu','hud-audio','hud-reports','intro-audio'])assert.ok(html.includes('id="'+id+'"'));
+ assert.ok(css.includes('height:100dvh!important'));
+ assert.ok(css.includes('division-headline h2'));
+ assert.ok(css.includes('body.has-division-selection'));
+});
+test('soundtrack is entirely original, opt-in, and locally synthesized',()=>{
+ const audio=read('soundscape.js'),app=read('app.js');
+ assert.ok(audio.includes('export function createSoundscape'));
+ assert.ok(audio.includes('window.AudioContext||window.webkitAudioContext'));
+ assert.ok(audio.includes('createBuffer('));
+ assert.ok(audio.includes('createOscillator()'));
+ assert.ok(audio.includes('original'));
+ assert.ok(!audio.includes('new Audio('));
+ assert.ok(!audio.includes('fetch('));
+ assert.ok(app.includes("sound.toggle()"));
+ assert.ok(app.includes("sound.select()"));
+ assert.ok(app.includes("sound.hover()"));
+ assert.ok(app.includes("sound.reveal()"));
+ assert.ok(!app.includes("'search-toggle'"));
+ assert.ok(!app.includes("'all-reports'"));
+});
