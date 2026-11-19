@@ -26,6 +26,7 @@ try{
   const navColor=await page.locator('.topbar').evaluate(el=>getComputedStyle(el).backgroundColor);
   assert.ok(/rgba\(/.test(navColor),'World navigation should use a transparent glass background');
   await page.locator('.route-stop[data-district="hr"]').click();
+  await page.waitForFunction(()=>location.hash==='#world:hr'&&document.querySelector('#panel-content')?.textContent?.includes('GIEZELLE'),null,{timeout:8500});
   assert.match(await page.locator('#panel-content').innerText(),/GIEZELLE/);
   assert.match(await page.locator('#panel-content').innerText(),/KURT/);
   await page.screenshot({path:'browser-results/04-hr-division.png'});
@@ -40,6 +41,7 @@ try{
   ];
   for(const [id,name] of assignments){
     await page.locator('.route-stop[data-district="'+id+'"]').click();
+    await page.waitForFunction(([id,name])=>location.hash==='#world:'+id&&document.querySelector('#panel-content')?.textContent?.includes(name),[id,name],{timeout:8500});
     assert.ok((await page.locator('#panel-content').innerText()).includes(name),'Evaluator must match division '+id);
   }
   await page.screenshot({path:'browser-results/05-eight-divisions.png'});
