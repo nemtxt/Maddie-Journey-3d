@@ -40,7 +40,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       for(let i=0;i<3;i++){const cone=new THREE.Mesh(new THREE.ConeGeometry((2.7-i*.58)*s,5*s,6),i%2?grassDark:mat('#3f7f62'));cone.position.set(x,5.2*s+i*1.55*s,z);world.add(cone);}
     }
   }
-  for(let i=0;i<145;i++){
+  for(let i=0;i<(window.innerWidth<700?65:115);i++){
     const a=rand()*Math.PI*2,r=Math.sqrt(rand())*.92;
     const x=Math.cos(a)*46*r,z=Math.sin(a)*30*r;
     const close=districts.some(d=>Math.hypot(d.x-x,d.z-z)<6);
@@ -126,13 +126,14 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   const desiredPosition=new THREE.Vector3(),projected=new THREE.Vector3();
   const pointer={down:false,drag:false,x:0,y:0,theta:0,phi:0};
   let active=null,touring=false,tourT=0,tourIndex=-1,run=true,animate=true,last=performance.now(),raf=0,disposed=false;
+  function fitRadius(){return Math.max(107,100/(2*Math.tan(39*Math.PI/360)*camera.aspect));}
   function focus(id){const d=districts.find(item=>item.id===id);if(!d)return;
-    active=id;orbit.target.set(d.x,4,d.z);orbit.rDesired=70;orbit.thetaDesired=.34;orbit.phiDesired=1;
+    active=id;orbit.target.set(d.x,4,d.z);orbit.rDesired=Math.max(70,fitRadius()*.78);orbit.thetaDesired=.34;orbit.phiDesired=1;
     nameNodes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===id)));
   }
-  function reset(){touring=false;active=null;orbit.target.set(0,3,0);orbit.rDesired=107;orbit.thetaDesired=.35;orbit.phiDesired=1;
+  function reset(){touring=false;active=null;orbit.target.set(0,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
     nameNodes.forEach(b=>b.setAttribute('aria-pressed','false'));}
-  function zoom(delta){orbit.rDesired=THREE.MathUtils.clamp(orbit.rDesired+delta,49,146);}
+  function zoom(delta){const fit=fitRadius();orbit.rDesired=THREE.MathUtils.clamp(orbit.rDesired+delta,Math.max(49,fit*.58),Math.max(146,fit*1.55));}
   function startTour(){tourT=0;tourIndex=-1;touring=true;active=null;}
   function stopTour(){touring=false;}
   function setMotion(enabled){animate=Boolean(enabled);if(!animate)stopTour();}
@@ -143,9 +144,9 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   canvas.addEventListener('pointerup',e=>{if(pointer.down&&!pointer.drag)pick(e);pointer.down=false;});
   canvas.addEventListener('pointercancel',()=>{pointer.down=false;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();touring=false;zoom(Math.sign(e.deltaY)*6);},{passive:false});
-  function resize(){const width=Math.max(1,stage.clientWidth),height=Math.max(1,stage.clientHeight);camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);}
+  function resize(){const width=Math.max(1,stage.clientWidth),height=Math.max(1,stage.clientHeight);camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);if(!active&&!touring)orbit.rDesired=fitRadius();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);resize();
-  function updateLabels(){const rect=canvas.getBoundingClientRect();const stageRect=stage.getBoundingClientRect();
+  function updateLabels(){if(stage.classList.contains('is-2d'))return;const rect=canvas.getBoundingClientRect();const stageRect=stage.getBoundingClientRect();
     districts.forEach((d,i)=>{const label=nameNodes.get(d.id);
       projected.copy(anchors[i]).project(camera);
       const sx=(projected.x*.5+.5)*rect.width+rect.left-stageRect.left;
@@ -159,7 +160,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   function tick(time){if(disposed)return;raf=requestAnimationFrame(tick);if(!run)return;const dt=Math.min(.045,(time-last)/1000||.016);last=time;
     if(touring){tourT+=dt/32;if(tourT>=1){tourT=1;touring=false;}
       traveler.position.copy(curve.getPointAt(Math.min(tourT,.9999)));const point=curve.getPointAt(Math.min(tourT,.9999));
-      orbit.target.copy(point).add(new THREE.Vector3(0,2,0));orbit.rDesired=55;orbit.thetaDesired=.35;orbit.phiDesired=.96;
+      orbit.target.copy(point).add(new THREE.Vector3(0,2,0));orbit.rDesired=Math.max(55,fitRadius()*.65);orbit.thetaDesired=.35;orbit.phiDesired=.96;
       const idx=Math.min(districts.length-1,Math.floor(tourT*districts.length));
       if(idx!==tourIndex){tourIndex=idx;active=districts[idx].id;onSelect(active,{fromTour:true});}
       if(!touring){orbit.rDesired=85;}
