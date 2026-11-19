@@ -32,7 +32,7 @@ test('fictional snapshot preserves 51 unique source-derived people in eight divi
 
 test('no original live connector engine, credentials or bootstrapping is imported',()=>{
  const html=read('index.html'),app=read('app.js');
- assert.ok(html.includes('type="module" src="app.js"'));
+ assert.ok(/type="module" src="app\.js\?v=/.test(html));
  assert.ok(!html.includes('data/core.js'));
  assert.ok(!html.includes('data/data.js'));
  assert.ok(!html.includes('data/demo-data.js'));
@@ -56,7 +56,13 @@ test('welcome scene is fullscreen and Start is accessible after loading',()=>{
  assert.ok(html.includes('id="sky-intro" aria-labelledby="intro-title"'));
  assert.ok(html.includes('Welcome to'));
  assert.ok(html.includes('Maddie Journey</em>'));
- assert.ok(html.includes('id="intro-start" disabled'));
+ assert.ok(html.includes('id="intro-start"'));
+ assert.ok(!html.includes('id="intro-start" disabled'));
+ assert.ok(html.includes('window.MADDIE_INTRO'));
+ assert.ok(html.includes('setTimeout(function()'));
+ assert.ok(html.includes('id="intro-sky-veil"'));
+ assert.ok(css.includes('.intro-sky-veil'));
+ assert.ok(html.includes('styles.css?v='));
  assert.ok(html.includes('id="intro-skip"'));
  assert.ok(html.includes('gsap@3.12.5/dist/gsap.min.js'));
  assert.ok(css.includes('body.intro-active #world-stage'));
@@ -71,6 +77,10 @@ test('Start descends through clouds in one continuous Three.js scene with safe f
  assert.ok(app.includes('duration:5.3'));
  assert.ok(app.includes("!introDone"));
  assert.ok(app.includes('requestAnimationFrame(step)'));
+ assert.ok(app.includes('window.MADDIE_INTRO?.register('));
+ assert.ok(app.includes('window.MADDIE_INTRO?.ready()'));
+ assert.ok(app.includes('window.MADDIE_INTRO?.fail()'));
+ assert.ok(app.includes('world.js?v='));
  assert.ok(world.includes('const introState='));
  assert.ok(world.includes('const skyClouds='));
  assert.ok(world.includes('scene.add(group)'));
