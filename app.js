@@ -300,7 +300,7 @@ async function start(){
  renderDistrictStrip();fillSummary();
  const labelsRoot=$('landmark-labels');try{
   const mod=await import('./world.js');
-  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()});
+  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()&&!introDone});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
  $('intro-start').disabled=false;
