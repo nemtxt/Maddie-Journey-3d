@@ -1,6 +1,6 @@
 # Maddie Journey — Interactive 3D World
 
-**V1.1 · independent fictional-data prototype · November 2026**
+**V1.3 · Division World & Animated Forest · November 2026**
 
 An Awwwards-inspired, interactive miniature world for exploring the Maddie Journey People & Culture reporting environment. This project is deliberately **separate from** [the original fictional prototype](https://github.com/nemtxt/Maddie-Journey-Prototype), which has not been changed.
 
@@ -14,9 +14,35 @@ The default root / `#overview` opens a full-screen, atmospheric sky with animate
 
 **Dependencies:** Three.js 0.161.0 and GSAP 3.12.5 are served from jsDelivr; no account, billing, server-side rendering or paid animation plugins are required. A network connection is needed to load these libraries.
 
+## V1.3 — Eight themed division districts
+
+The world now showcases the **eight requested company divisions** as distinct original 3D campuses:
+
+| 3D district | Visual landmark | Assigned evaluator / user |
+| --- | --- | --- |
+| HR | People & Culture pavilion, records and 201 Files | GIEZELLE (HR); KURT (HR) |
+| Revenue Management Division | KPI observatory and revenue performance tower | TRIZIA BALDOVI — Chief Experience Officer |
+| Design Division | Creative atelier, sculptural installations and design boards | AR. AJ TRABADO — Design Operations Manager |
+| Corporate Operations | Operations office campus, workflow display and clocktower | RENATO RENDON; ZSARINA MAE LACUMBA — Corporate Operations Head |
+| Media | Production studio, broadcasting tower and camera props | MICHELLE OROCIO — Media Manager |
+| IT | Data centre, server racks and glowing circuit pathways | INIGO ARELLANO — COO |
+| GenCon | Event hall, stage and amphitheater | INIGO ARELLANO — COO |
+| Business Development | Growth harbor, partnership bridge and tower | MA. CRISTINE ORTIZ — Business Development Head |
+
+**Data-model separation:** Eight new 3D division districts are **not** a replacement or relabeling of the original nine monitoring workspaces or the fictional sample's eight source-group names. `divisions.js` contains evaluator metadata supplied by the user, whereas `data/fictional-snapshot.json` remains unchanged and exclusively fictional.
+
+**Scene upgrades:**
+- Richly differentiated campus models authored procedurally in `world-assets.js`, including KPIs, communications, records and journey signage
+- Denser instanced forests with pine/broadleaf variation and GPU-driven subtle canopy sway
+- Instanced rocks, wild grasses and landscaping, stratified mountain ridges and snowlines, improved rockfall and scenic paths
+- Physically based, gently animated water and ripples, soft contact shadows, fog and sky/environmental lighting
+- Transparent glass navigation, interactive district labels, select/hover feedback and dedicated evaluator panels
+
+**Asset policy:** The shipped version uses custom procedural meshes and Three.js primitives, avoiding third-party model copyright and ongoing asset hosting dependencies. Forest models from Sketchfab, Free3D, Envato, CGTrader, Adobe Stock or Khronos may be evaluated for future model additions, but individual asset licenses and attribution terms must be verified **before** redistribution. No purchased or unverified third-party model is included here.
+
 ## Implemented
 - Original stylized 3D floating island environment created with Three.js: low-poly mountains and snowcaps, forest, tree clusters, river, lake, waterfall, miniature buildings and floating clouds.
-- Nine themed landmark destinations, selectable via 3D raycasting, HTML labels, the route strip, or global search.
+- Eight division-themed geographic destinations, selectable via 3D raycasting, HTML labels, the route strip, or global search.
 - Winding illuminated route with moving waypoint marker, smooth orbit/zoom camera navigation and a guided journey tour.
 - Full responsive HTML dashboard shell with world, executive overview, people directory and journey stages.
 - Search across fictional employees, destinations and 86 registered reports, with a keyboard shortcut (Ctrl/Cmd+K).
@@ -30,8 +56,9 @@ V1 is a **new 3D world and monitoring/navigation layer**. It does not yet recrea
 ## Original fictional data, safely mirrored
 
 The project includes:
+- `divisions.js`: eight division destinations, evaluator contacts and related workspace associations, supplied as display metadata.
 - `data/mock-data-manifest.json`: unchanged original nine-workspace / 86-route manifest.
-- `data/fictional-snapshot.json`: a display-only, source-derived projection of the original **51 fictional employees in eight divisions** (names, roles, status, dates, 201-file completeness, attendance summary). Values used here are derived from the original demo rather than newly invented.
+- `data/fictional-snapshot.json`: a display-only, source-derived projection of the original **51 fictional employees in eight source-data groupings** (names, roles, status, dates, 201-file completeness, attendance summary). Values used here are derived from the original demo rather than newly invented.
 
 **Important:** The new repository deliberately does **not** contain original runtime connector configuration, the live Claude bootstrap, confidential employee records, salary fields, passwords, or API credentials. No Airtable, Google, or Claude APIs are called. Use only fictional demonstration data in this public project.
 
@@ -58,14 +85,14 @@ This repository is static and can use GitHub Pages from **Settings → Pages →
 
 ## Controls
 - Drag the world to orbit, scroll to zoom; on touch devices, drag the canvas.
-- Click a landmark label or the horizontal destinations strip to focus on a workspace.
+- Click a landmark label or the horizontal destinations strip to focus on a division, then open one of its linked reporting workspaces.
 - Use **Begin the journey** for the animated route tour.
 - Use **2D view** to switch away from WebGL.
 - Search globally with **Ctrl+K** or **Cmd+K**.
 - Open a workspace to access its exact original report routes.
 
 ## Next development gates
-1. Replace blocky placeholders with optimized, brand-approved original GLB assets.
+1. Optionally supplement bespoke procedural landmarks with rights-cleared optimized GLB assets, retaining offline geometry fallbacks.
 2. Integrate narrative milestone stops and a real employee-specific journey visualization (not fabricated data).
 3. Recreate specialized report tables/charts only after side-by-side comparison to the original source.
 4. Complete cross-device WebGL, keyboard, color contrast, reduced motion and performance testing.
