@@ -180,7 +180,41 @@ test('Dream Factory-informed details are original procedural scenery and preserv
  assert.ok(scenic.includes("lowQuality?2:4"));
  assert.ok(!scenic.includes("sketchfab.com/"));
  assert.ok(!scenic.includes("hkdi.edu.hk/dreamfactory/assets"));
- assert.ok(app.includes("world.js?v=1.5.0"));
+ assert.ok(app.includes("world.js?v=1.6.0"));
+ assert.equal(snapshot.people.length,51);
+ assert.equal(manifest.workspaces.length,9);
+ assert.equal(manifest.workspaces.reduce((sum,w)=>sum+w.sections.length,0),86);
+});
+
+
+test('Adventure Journey has route imagery, editorial typography, usable Start CTA and reduced motion',()=>{
+ const html=read('index.html'),css=read('styles.css'),app=read('app.js');
+ for(const token of [
+  'expedition-graphics','expedition-compass','intro-flight-trail','intro-flight-line',
+  'intro-waypoint','expedition-float-note','intro-edition','intro-destination-count',
+  'Begin Adventure','THE ADVENTURE BEGINS','division-route-ornament'
+ ])assert.ok(html.includes(token),'Missing expedition visual '+token);
+ assert.ok(css.includes('"Fraunces"'));
+ assert.ok(css.includes('"DM Sans"'));
+ assert.ok(css.includes('.intro-start.expedition-start'));
+ assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
+ assert.ok(css.includes('body.expedition-launching .intro-flight-line'));
+ assert.ok(app.includes("classList.add('expedition-launching')"));
+ assert.ok(app.includes("classList.add('intro-loaded')"));
+ assert.ok(app.includes("classList.remove('intro-loaded','expedition-launching')"));
+ assert.ok(app.includes('introTween=gsap.timeline'));
+ assert.ok(app.includes('bezierInto')===false); // Camera path belongs in world.js, not the app.
+});
+test('Eight 3D adventure outposts use original shared geometric assets',()=>{
+ const world=read('world.js'),assets=read('adventure-assets.js');
+ assert.ok(world.includes('createAdventureAssets(THREE,world,districts,{lowQuality})'));
+ assert.ok(world.includes('adventureAssets.update(time,animate)'));
+ assert.ok(world.includes('adventureAssets.setActive(id)'));
+ assert.ok(world.includes('dataset.adventureOutposts'));
+ for(const token of ['EXPEDITION OUTPOST','Waypoint ','flagGeometry','Compass','compass','outpostCount','dispose'])assert.ok(assets.includes(token));
+ assert.ok(!assets.includes('fetch('));
+ assert.ok(!assets.includes('https://'));
+ assert.equal(DIVISIONS.length,8);
  assert.equal(snapshot.people.length,51);
  assert.equal(manifest.workspaces.length,9);
  assert.equal(manifest.workspaces.reduce((sum,w)=>sum+w.sections.length,0),86);
