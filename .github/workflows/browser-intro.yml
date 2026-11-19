@@ -10,6 +10,9 @@ on:
       - 'tests/browser-smoke.mjs'
       - '.github/workflows/browser-intro.yml'
   workflow_dispatch:
+concurrency:
+  group: maddie-3d-browser-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
