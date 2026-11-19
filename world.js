@@ -137,9 +137,10 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   }
   // Distinct original project assets for eight actual company divisions.
   const accentColors=districts.map(d=>d.color);
-  const anchors=[],animatedDistrictAssets=[];
+  const anchors=[],animatedDistrictAssets=[],districtModels=new Map();
   districts.forEach((d,i)=>{
     const district=buildDivisionDistrict(THREE,world,d);
+    districtModels.set(d.id,district.group);
     animatedDistrictAssets.push(...district.moving);
     const hit=new THREE.Mesh(new THREE.CylinderGeometry(7,7,22,12),
       new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
@@ -180,8 +181,8 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   const nameNodes=new Map();districts.forEach((d,i)=>{
     const btn=document.createElement('button');btn.className='world-label';btn.type='button';btn.style.setProperty('--accent',accentColors[i]);
     const dot=document.createElement('span');dot.className='label-dot';
-    const words=document.createElement('span');words.textContent=d.short;
-    const small=document.createElement('small');small.textContent='DESTINATION '+String(i+1).padStart(2,'0');words.append(small);
+    const words=document.createElement('span');words.textContent=d.name;
+    const small=document.createElement('small');small.textContent=d.short+' · '+String(i+1).padStart(2,'0');words.append(small);
     btn.append(dot,words);btn.setAttribute('aria-label','Explore '+d.name);btn.setAttribute('aria-pressed','false');
     btn.addEventListener('click',()=>{focus(d.id);onSelect(d.id,{fromWorld:true});});
     labelsRoot.append(btn);nameNodes.set(d.id,btn);
@@ -228,7 +229,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
   function pick(event){const rect=canvas.getBoundingClientRect();mouse.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const hit=raycaster.intersectObjects(hitTargets,false)[0];if(hit){const id=hit.object.userData.district;focus(id);onSelect(id,{fromWorld:true});}}
   canvas.addEventListener('pointerdown',e=>{pointer.down=true;pointer.drag=false;pointer.x=e.clientX;pointer.y=e.clientY;pointer.theta=orbit.thetaDesired;pointer.phi=orbit.phiDesired;canvas.setPointerCapture(e.pointerId);});
-  canvas.addEventListener('pointermove',e=>{if(!pointer.down)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>6)pointer.drag=true;if(pointer.drag){touring=false;orbit.thetaDesired=pointer.theta-dx*.005;orbit.phiDesired=THREE.MathUtils.clamp(pointer.phi+dy*.004,.46,1.48);}});
+  canvas.addEventListener('pointermove',e=>{if(!pointer.down){const rect=canvas.getBoundingClientRect();mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);canvas.style.cursor=raycaster.intersectObjects(hitTargets,false).length?'pointer':'grab';return;}const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>6)pointer.drag=true;if(pointer.drag){touring=false;orbit.thetaDesired=pointer.theta-dx*.005;orbit.phiDesired=THREE.MathUtils.clamp(pointer.phi+dy*.004,.46,1.48);}});
   canvas.addEventListener('pointerup',e=>{if(pointer.down&&!pointer.drag)pick(e);pointer.down=false;});
   canvas.addEventListener('pointercancel',()=>{pointer.down=false;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();touring=false;zoom(Math.sign(e.deltaY)*6);},{passive:false});
@@ -253,6 +254,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       if(idx!==tourIndex){tourIndex=idx;active=districts[idx].id;onSelect(active,{fromTour:true});}
       if(!touring){orbit.rDesired=85;}
     } else if(animate){traveler.position.copy(curve.getPointAt((time*.000012)%1));}
+    districtModels.forEach((obj,id)=>{const next=id===active?1.055:1;const value=obj.scale.x+(next-obj.scale.x)*.085;obj.scale.setScalar(value);});
     if(introState.active){
       // A single continuous camera trajectory from clear sky, through the cloud
       // layers, down to the same exact isometric orbit used for world exploration.
