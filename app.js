@@ -20,8 +20,8 @@ const MILESTONES=[
  {name:'Transition',place:'Executive Summit',id:'scoreboard',route:'journey:employee-movement',note:'Movements and employment transitions'}
 ];
 const $=id=>document.getElementById(id),safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const employees=Array.isArray(window.MCD?.EMP)?window.MCD.EMP:[];
-const metrics=window.MCD?.M||{};
+let employees=[];
+let divisionSummaries=[];
 let manifest={workspaces:[]},world=null,force2D=false,motionEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let peopleSearch='',peopleDivision='all',lastSearchQuery='',currentView='world',selectedDistrict=null;
 const srcLink=(wid,sid)=>ORIGINAL+'#'+wid+':'+sid;
@@ -105,7 +105,7 @@ function heading(title,desc){
  $('content-heading').textContent=title;$('content-subtitle').textContent=desc||'';$('content-area').scrollIntoView({behavior:motionEnabled?'smooth':'instant',block:'start'});
 }
 function dashboardMetrics(){
- const d=window.MCD?.M||{},num=x=>Number.isFinite(Number(x))?x:'—';
+
  return [
  ['Fictional people',employees.length,'Current active example roster'],
  ['Workspaces',manifest.workspaces.length,'Interactive world destinations'],
@@ -116,7 +116,7 @@ function dashboardMetrics(){
 function metricCards(rows){return '<div class="info-grid">'+rows.map(([name,num,info])=>'<div class="metric-card"><span class="metric-label">'+safe(name)+'</span><strong>'+safe(num)+'</strong><small>'+safe(info)+'</small></div>').join('')+'</div>';}
 function renderDashboard(){
  heading('World overview','A complete picture of the nine People & Culture workspaces, with an interactive landscape as the starting point.');
- const divisions=window.MCD?.D||[];
+ const divisions=divisionSummaries;
  $('content-body').innerHTML=metricCards(dashboardMetrics())+'<div class="dashboard-split"><section class="surface-card"><h3>Explore a workspace</h3><p class="card-description">Every destination opens its own original report inventory, without changing the fictional data.</p><div class="workspace-grid">'+
  DISTRICTS.map(d=>{const w=wspace(d.id);return '<button type="button" class="workspace-tile" data-workspace="'+d.id+'"><span class="tile-bullet" style="--tile:'+d.color+'"></span><span>'+safe(d.name)+'<small>'+(w?.sections.length??0)+' reports →</small></span></button>';}).join('')+
  '</div></section><section class="surface-card"><h3>Workforce by division</h3><p class="card-description">Counts are sourced from the original fictional fixture.</p>'+
@@ -230,7 +230,7 @@ function wireEvents(){
 }
 async function start(){
  wireEvents();
- try{const res=await fetch('./data/mock-data-manifest.json',{cache:'no-cache'});if(!res.ok)throw new Error('Route manifest unavailable');manifest=await res.json();}
+ try{const [res,snapshot]=await Promise.all([fetch('./data/mock-data-manifest.json',{cache:'no-cache'}),fetch('./data/fictional-snapshot.json',{cache:'no-cache'})]);if(!res.ok||!snapshot.ok)throw new Error('Fictional data unavailable');manifest=await res.json();const demo=await snapshot.json();employees=demo.people||[];divisionSummaries=demo.divisions||[];if(employees.length!==51||divisionSummaries.length!==8)console.warn('Unexpected fictional roster size');}
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
  renderDistrictStrip();fillSummary();
  const labelsRoot=$('landmark-labels');try{
@@ -239,6 +239,6 @@ async function start(){
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
  routeTo(location.hash);
- if(!window.MCD||!employees.length)console.warn('Original fictional roster unavailable. Check source modules under data/.');
+ if(!employees.length)console.warn('Display-only fictional roster unavailable. Check data/fictional-snapshot.json.');
 }
 start();
