@@ -47,7 +47,7 @@ try{
   }
   await page.screenshot({path:'browser-results/05-eight-divisions.png'});
   await page.locator('#all-reports').click({force:true});
-  await page.waitForFunction(()=>location.hash==='#dashboard',null,{timeout:8000});
+  await page.waitForFunction(()=>location.hash==='#dashboard'&&document.querySelectorAll('.workspace-tile').length===9,null,{timeout:9000});
   assert.equal(await page.locator('.workspace-tile').count(),9,'Nine original workspaces must remain linked');
   assert.equal(await page.locator('.division-tile').count(),8,'Overview must show all eight divisions');
   console.log('PASS: Eight division districts, evaluator names, glass navigation and nine workspaces');
