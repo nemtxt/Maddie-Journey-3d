@@ -195,8 +195,8 @@
     });
     skip.addEventListener('click',function(){
       clearTimeout(watchdog);pending=false;
-      if(handlers){handlers.onSkip();closed=true;}
-      else fallback('Intro skipped. The fictional dashboard remains available.');
+      if(handlers&&sceneReady){handlers.onSkip();closed=true;}
+      else {fallback('Intro skipped. The fictional dashboard remains available.');if(handlers)handlers.onSkip();}
     });
   })();
   </script>
