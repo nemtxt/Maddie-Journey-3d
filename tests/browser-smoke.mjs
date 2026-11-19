@@ -27,6 +27,14 @@ try{
  assert.equal(await page.locator('.bottom-bar').count(),0,'Bottom route strip removed');
  assert.equal(await page.locator('.site-foot').count(),0,'Footer removed from immersive world');
  assert.equal(await page.locator('.world-label').count(),8);
+ await page.waitForFunction(()=>document.querySelector('#world-canvas')?.dataset.storyEnvironment==='v1.5',null,{timeout:15000});
+ const scenic=await page.locator('#world-canvas').evaluate(el=>({
+  version:el.dataset.storyEnvironment,
+  layers:Number(el.dataset.geologicalLayers),
+  quality:el.dataset.storyQuality
+ }));
+ assert.equal(scenic.layers,4,'All four original geological strata must be constructed');
+ assert.ok(['lite','enhanced'].includes(scenic.quality),'Mobile-quality fallback remains available');
  await page.waitForTimeout(900);
  await page.screenshot({path:'browser-results/02-fullscreen-world.png'});
 
