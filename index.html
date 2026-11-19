@@ -168,6 +168,7 @@
       if(closed)return;
       closed=true;pending=false;clearTimeout(watchdog);
       document.body.classList.remove('intro-active');
+      document.body.classList.add('view-world','fallback-boot');
       document.getElementById('sky-intro').hidden=true;
       var stage=document.getElementById('world-stage');
       var world=document.getElementById('world-fallback');
