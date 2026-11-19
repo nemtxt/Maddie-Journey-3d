@@ -9,16 +9,20 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   scene.fog=new THREE.FogExp2('#d6eef0',0.0032);
   const camera=new THREE.PerspectiveCamera(39,1,.1,420);
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.65));
+  const gl=renderer.getContext();
+  const debugInfo=gl.getExtension('WEBGL_debug_renderer_info');
+  const rendererName=debugInfo?String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)||''):'';
+  const lowQuality=window.innerWidth<700||/(swiftshader|llvmpipe|software)/i.test(rendererName);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowQuality?1:window.innerWidth<950?1.25:1.5));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.28;
-  renderer.shadowMap.enabled=true;
-  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled=!lowQuality;
+  renderer.shadowMap.type=THREE.PCFShadowMap;
   const hemi=new THREE.HemisphereLight(0xf8ffff,0x659381,2.7);scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xfff5df,2.75);sun.position.set(-35,76,43);scene.add(sun);
-  sun.castShadow=true;
-  sun.shadow.mapSize.set(window.innerWidth<850?1024:2048,window.innerWidth<850?1024:2048);
+  sun.castShadow=!lowQuality;
+  sun.shadow.mapSize.set(lowQuality?512:1024,lowQuality?512:1024);
   sun.shadow.camera.left=-75;sun.shadow.camera.right=75;sun.shadow.camera.top=75;sun.shadow.camera.bottom=-75;
   sun.shadow.camera.near=1;sun.shadow.camera.far=190;sun.shadow.bias=-.00012;
   const rim=new THREE.DirectionalLight(0xc3e7e9,.73);rim.position.set(50,44,-58);scene.add(rim);
@@ -56,7 +60,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     if(close||Math.abs(z)<3&&Math.abs(x)<8)continue;
     addTree(x,z,.5+rand()*.85,rand()<.33?'broad':'pine');
   }
-  const animatedForest=enhanceForest(THREE,world,districts,{mobile:window.innerWidth<850});
+  const animatedForest=enhanceForest(THREE,world,districts,{mobile:window.innerWidth<850||lowQuality});
   // Layered mountain faces with irregular ridges, naturally varied rock strata
   // and vertex-colored snowlines; no external textures or licensed models needed.
   function mountain(x,z,r,h,shade){
