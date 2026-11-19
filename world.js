@@ -1,5 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-import {buildDivisionDistrict,enhanceTerrain} from './world-assets.js?v=1.3.0';
+import {buildDivisionDistrict,enhanceTerrain,enhanceForest} from './world-assets.js?v=1.3.0';
 
 /** A lightweight bespoke Three.js diorama, no downloadable models or premium assets. */
 export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=true,intro=true}) {
@@ -49,13 +49,14 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       for(let i=0;i<3;i++){const cone=new THREE.Mesh(new THREE.ConeGeometry((2.7-i*.58)*s,5*s,6),i%2?grassDark:mat('#3f7f62'));cone.position.set(x,5.2*s+i*1.55*s,z);world.add(cone);}
     }
   }
-  for(let i=0;i<(window.innerWidth<700?65:115);i++){
+  for(let i=0;i<(window.innerWidth<700?22:42);i++){
     const a=rand()*Math.PI*2,r=Math.sqrt(rand())*.92;
     const x=Math.cos(a)*46*r,z=Math.sin(a)*30*r;
     const close=districts.some(d=>Math.hypot(d.x-x,d.z-z)<6);
     if(close||Math.abs(z)<3&&Math.abs(x)<8)continue;
     addTree(x,z,.5+rand()*.85,rand()<.33?'broad':'pine');
   }
+  const animatedForest=enhanceForest(THREE,world,districts,{mobile:window.innerWidth<850});
   // Mountain range: low-poly slopes, peaks, snow caps, foreground ridge.
   function mountain(x,z,r,h,shade){
     const rock=new THREE.Mesh(new THREE.ConeGeometry(r,h,7,3),shade);rock.position.set(x,1.5+h/2,z);rock.rotation.y=rand();world.add(rock);
@@ -240,6 +241,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       desiredPosition.set(orbit.focus.x+Math.sin(orbit.theta)*Math.sin(orbit.phi)*orbit.radius,orbit.focus.y+Math.cos(orbit.phi)*orbit.radius,orbit.focus.z+Math.cos(orbit.theta)*Math.sin(orbit.phi)*orbit.radius);
       camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
     }
+    animatedForest.update(time,animate);
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
       waterRipples.forEach((r,i)=>{r.scale.setScalar(.6+((time*.00017+i*.22)%1)*1.3);r.material.opacity=.38*(1-(time*.00017+i*.22)%1);});
       animatedDistrictAssets.forEach((a,i)=>{
