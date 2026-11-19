@@ -55,7 +55,7 @@ test('welcome scene is fullscreen and Start is accessible after loading',()=>{
  assert.ok(html.includes('class="intro-active"'));
  assert.ok(html.includes('id="sky-intro" aria-labelledby="intro-title"'));
  assert.ok(html.includes('Welcome to'));
- assert.ok(html.includes('Maddie Journey.'));
+ assert.ok(html.includes('Maddie Journey</em>'));
  assert.ok(html.includes('id="intro-start" disabled'));
  assert.ok(html.includes('id="intro-skip"'));
  assert.ok(html.includes('gsap@3.12.5/dist/gsap.min.js'));
