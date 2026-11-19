@@ -191,7 +191,8 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     btn.addEventListener('click',()=>{focus(d.id);onSelect(d.id,{fromWorld:true});});
     labelsRoot.append(btn);nameNodes.set(d.id,btn);
   });
-  const orbit={theta:.35,phi:1.01,radius:107,target:new THREE.Vector3(0,3,0),focus:new THREE.Vector3(0,3,0),rDesired:107,thetaDesired:.35,phiDesired:1.01};
+  const overviewX=window.innerWidth>=1100?-7:0;
+  const orbit={theta:.35,phi:1.01,radius:107,target:new THREE.Vector3(overviewX,3,0),focus:new THREE.Vector3(overviewX,3,0),rDesired:107,thetaDesired:.35,phiDesired:1.01};
   const desiredPosition=new THREE.Vector3(),projected=new THREE.Vector3();
   const pointer={down:false,drag:false,x:0,y:0,theta:0,phi:0};
   let active=null,touring=false,tourT=0,tourIndex=-1,run=true,animate=Boolean(motionEnabled),last=performance.now(),raf=0,disposed=false;
@@ -212,7 +213,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     orbit.theta=orbit.thetaDesired=.35;
     orbit.phi=orbit.phiDesired=1.01;
     orbit.radius=orbit.rDesired=fitRadius();
-    orbit.target.set(0,3,0);orbit.focus.copy(orbit.target);
+    orbit.target.set(overviewX,3,0);orbit.focus.copy(orbit.target);
     desiredPosition.set(
       orbit.focus.x+Math.sin(orbit.theta)*Math.sin(orbit.phi)*orbit.radius,
       orbit.focus.y+Math.cos(orbit.phi)*orbit.radius,
@@ -224,7 +225,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     active=id;orbit.target.set(d.x,4,d.z);orbit.rDesired=Math.max(70,fitRadius()*.78);orbit.thetaDesired=.34;orbit.phiDesired=1;
     nameNodes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===id)));
   }
-  function reset(){touring=false;active=null;orbit.target.set(0,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
+  function reset(){touring=false;active=null;orbit.target.set(overviewX,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
     nameNodes.forEach(b=>b.setAttribute('aria-pressed','false'));}
   function zoom(delta){const fit=fitRadius();orbit.rDesired=THREE.MathUtils.clamp(orbit.rDesired+delta,Math.max(49,fit*.58),Math.max(146,fit*1.55));}
   function startTour(){tourT=0;tourIndex=-1;touring=true;active=null;}
@@ -263,9 +264,9 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       // A single continuous camera trajectory from clear sky, through the cloud
       // layers, down to the same exact isometric orbit used for world exploration.
       const p=introState.progress,r=fitRadius();
-      const endEye=new THREE.Vector3(Math.sin(.35)*Math.sin(1.01)*r,3+Math.cos(1.01)*r,Math.cos(.35)*Math.sin(1.01)*r);
+      const endEye=new THREE.Vector3(overviewX+Math.sin(.35)*Math.sin(1.01)*r,3+Math.cos(1.01)*r,Math.cos(.35)*Math.sin(1.01)*r);
       bezierInto(introCameraPoint,p,startEye,new THREE.Vector3(-5,119,126),new THREE.Vector3(14,71,117),endEye);
-      bezierInto(introLookPoint,p,startTarget,new THREE.Vector3(0,116,-36),new THREE.Vector3(0,12,4),new THREE.Vector3(0,3,0));
+      bezierInto(introLookPoint,p,startTarget,new THREE.Vector3(0,116,-36),new THREE.Vector3(0,12,4),new THREE.Vector3(overviewX,3,0));
       camera.position.copy(introCameraPoint);camera.lookAt(introLookPoint);
     }else{
       const easing=animate?.07:1;
