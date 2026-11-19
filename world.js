@@ -165,10 +165,11 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       if(idx!==tourIndex){tourIndex=idx;active=districts[idx].id;onSelect(active,{fromTour:true});}
       if(!touring){orbit.rDesired=85;}
     } else if(animate){traveler.position.copy(curve.getPointAt((time*.000012)%1));}
-    orbit.theta=THREE.MathUtils.lerp(orbit.theta,orbit.thetaDesired,.07);
-    orbit.phi=THREE.MathUtils.lerp(orbit.phi,orbit.phiDesired,.07);
-    orbit.radius=THREE.MathUtils.lerp(orbit.radius,orbit.rDesired,.065);
-    orbit.focus.lerp(orbit.target,.065);
+    const easing=animate?.07:1;
+    orbit.theta=THREE.MathUtils.lerp(orbit.theta,orbit.thetaDesired,easing);
+    orbit.phi=THREE.MathUtils.lerp(orbit.phi,orbit.phiDesired,easing);
+    orbit.radius=THREE.MathUtils.lerp(orbit.radius,orbit.rDesired,easing);
+    orbit.focus.lerp(orbit.target,easing);
     desiredPosition.set(orbit.focus.x+Math.sin(orbit.theta)*Math.sin(orbit.phi)*orbit.radius,orbit.focus.y+Math.cos(orbit.phi)*orbit.radius,orbit.focus.z+Math.cos(orbit.theta)*Math.sin(orbit.phi)*orbit.radius);
     camera.position.lerp(desiredPosition,.15);camera.lookAt(orbit.focus);
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
