@@ -1,6 +1,6 @@
 # Maddie Journey — Interactive 3D World
 
-**V1.3 · Division World & Animated Forest · November 2026**
+**V1.4 · Immersive World & Original Soundscape · November 2026**
 
 An Awwwards-inspired, interactive miniature world for exploring the Maddie Journey People & Culture reporting environment. This project is deliberately **separate from** [the original fictional prototype](https://github.com/nemtxt/Maddie-Journey-Prototype), which has not been changed.
 
@@ -13,6 +13,18 @@ The default root / `#overview` opens a full-screen, atmospheric sky with animate
 **Accessibility and graceful fallbacks:** Skip intro is always available; reduced-motion visitors transition directly to the world; the camera descent uses requestAnimationFrame if GSAP fails to load; an existing 2D fallback is shown if WebGL fails. Deep links into employee and report routes bypass the entrance. Controls remain keyboard navigable.
 
 **Dependencies:** Three.js 0.161.0 and GSAP 3.12.5 are served from jsDelivr; no account, billing, server-side rendering or paid animation plugins are required. A network connection is needed to load these libraries.
+
+## V1.4 — Full-viewport world and original soundscape
+
+**Layout:** The island uses the entire browser viewport on desktop and mobile. The previous full-width top navigation, horizontal destination bar and footer have been removed. A lightweight floating HUD provides Search, Reports, Sound and Motion; the lower-left **Explore divisions** control opens a compact list of all eight division locations. The nine original monitoring workspaces remain available from **Reports** and each division's linked evaluator-details drawer.
+
+**Selected division:** Clicking a world label, its geometry or an entry in the division picker moves the Three.js camera and displays a **large editorial division title on the left**, with a distinctive accent line, campus subtitle and short description. Evaluator names and original report links appear only when the user opens **Discover this division**, so the scene remains immersive. "All divisions" resets the view.
+
+**Sound:** `soundscape.js` generates an **original, non-copyrighted ambient musical score** with slowly shifting chords, plucked notes, filtered wind, nature accents and interaction chimes, using the browser's Web Audio API. No streaming, audio files, paid music library or downloads are used. Sound is **off by default** and requires an explicit click on `Enable ambient sound` (welcome screen) or `Sound off` (world HUD). It can be muted instantly, and its volume is reduced when opening data views. The browser must support Web Audio. The experience remains functional and silent otherwise.
+
+**Graphics:** New immersive sky-dome shader, warm sun gradient, sparse floating environmental particles, luminous division focus and additional CSS light atmospheric effects. Rendering adapts quality on mobile and software WebGL systems. Reduced-motion settings and the existing 2D fallback remain supported.
+
+**Testing:** Source invariants, JavaScript syntax and Chromium browser coverage verify that 51 fictional people, eight company districts, nine monitoring workspaces and 86 report routes are preserved. Browser tests cover full-viewport layout, visible selected-division headings, the evaluator panel, opt-in audio control, mobile and route navigation.
 
 ## V1.3 — Eight themed division districts
 
