@@ -51,6 +51,7 @@ function routeTo(hash){
  }else if(base==='dashboard'){showView('dashboard');renderDashboard();}
  else if(base==='people'&&!section){showView('people');renderPeople();}
  else if(base==='journey'&&!section){showView('journey');renderJourney();}
+ else if(base==='employee-journey'&&section){showView('employee-journey');renderEmployeeJourney(section);}
  else if(wspace(base)&&section){showView('report');renderReport(base,section);}
  else if(wspace(base)){showView('workspace');renderWorkspace(base);}
  else{location.hash='#overview';}
@@ -184,8 +185,25 @@ function employeeModal(key){
  ];
  $('employee-details').innerHTML='<div class="profile-head"><div class="profile-avatar">'+safe(initials(e.name))+'</div><div><h2 id="employee-title">'+safe(e.name)+'</h2><p>'+safe(e.role)+' · '+safe(e.dept)+'</p></div></div><div class="profile-grid">'+
  fields.map(([label,value])=>'<div class="profile-field"><small>'+safe(label)+'</small><strong>'+safe(value)+'</strong></div>').join('')+
- '</div><p class="profile-notice">This is a fictional sample employee record from the original Maddie Journey demo. Personal records here are not live. All values are read-only.</p>';
+ '</div><div class="detail-actions"><button type="button" class="primary-btn" data-employee-journey="'+safe(e.k)+'">Explore individual journey ↗</button></div><p class="profile-notice">This is a fictional sample employee record from the original Maddie Journey demo. Personal records here are not live. All values are read-only.</p>';
  $('employee-dialog').showModal();
+}
+function renderEmployeeJourney(key){
+ const e=employees.find(x=>x.k===key);
+ if(!e){heading('Journey not found','This fictional record is not in the current snapshot.');$('content-body').innerHTML='<p class="source-note">Select an employee from the People Directory.</p>';return;}
+ heading(e.name+'’s journey','A source-grounded visual trail through existing fictional employment records. Not all life-cycle stages have sample data.');
+ const moments=[
+ {place:'Talent Gateway',title:'Joining the team',value:e.hire||'Not recorded',note:'Start date from the original employee masterlist',present:!!e.hire},
+ {place:'People Base Camp',title:'Employment status',value:e.status||'Not recorded',note:'Employment classification in the current fictional roster',present:!!e.status},
+ {place:'Community Village',title:'Culture & belonging',value:'No individual record',note:'This personal milestone is not included in the display-only fixture',present:false},
+ {place:'Activity Valley',title:'Attendance record',value:e.l30==null?'Not recorded':e.l30+' late occurrences / 30 days',note:'Reported fictional attendance summary',present:e.l30!=null},
+ {place:'Learning Forest',title:'Journey evaluation',value:e.stage||'Not recorded',note:'Computed stage from existing probation and development data; not a training completion',present:!!e.stage},
+ {place:'Career Heights',title:'Regularization',value:e.reg||'Not recorded',note:'Regularization date, only where provided in the sample',present:!!e.reg},
+ {place:'Executive Summit',title:'Employment transition',value:'No individual record',note:'Do not infer a promotion, transfer or exit without a sourced event',present:false}
+ ];
+ $('content-body').innerHTML='<section class="surface-card"><div class="report-header"><div class="profile-head" style="margin:0"><div class="profile-avatar">'+safe(initials(e.name))+'</div><div><h3 style="margin-bottom:4px">'+safe(e.name)+'</h3><p class="card-description" style="margin:0">'+safe(e.role)+' · '+safe(e.dept)+'</p></div></div><span class="small-pill">FICTIONAL · READ ONLY</span></div><p class="card-description" style="margin-top:18px">The landmarks below show known sample values and explicitly identify gaps. They are not claims that every person completed all seven career stages.</p><div class="personal-path">'+
+ moments.map((p,i)=>'<article class="path-stop '+(p.present?'path-present':'path-unknown')+'"><div class="path-dot">'+String(i+1).padStart(2,'0')+'</div><div><small>'+safe(p.place)+'</small><h4>'+safe(p.title)+'</h4><strong>'+safe(p.value)+'</strong><p>'+safe(p.note)+'</p></div></article>').join('')+
+ '</div><div class="detail-actions"><button type="button" class="soft-btn" data-world="journey">Explore the 3D Journey area ↗</button><button type="button" class="soft-btn" data-report="journey:profile">Open original journey report ↗</button></div></section>';
 }
 function globalSearchResults(q){
  const term=q.trim().toLowerCase();
@@ -220,6 +238,7 @@ function wireEvents(){
    if(action==='person')employeeModal(key);if(action==='report')location.hash='#'+key;if(action==='world')location.hash='#world:'+key;
    return;
   }
+  const individual=e.target.closest('[data-employee-journey]');if(individual){$('employee-dialog').close();location.hash='#employee-journey:'+individual.dataset.employeeJourney;return;}
   const emp=e.target.closest('[data-employee]');if(emp){employeeModal(emp.dataset.employee);return;}
   const report=e.target.closest('[data-report]');if(report){location.hash='#'+report.dataset.report;return;}
   const work=e.target.closest('[data-workspace]');if(work){location.hash='#'+work.dataset.workspace;return;}
