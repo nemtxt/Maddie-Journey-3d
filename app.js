@@ -23,6 +23,7 @@ const showIntroOnEntry=()=>!location.hash||['#overview','#world'].includes(locat
 function finishIntro({focus=true}={}){
  if(introDone)return;
  introDone=true;introRunning=false;
+ document.body.classList.remove('intro-loaded','expedition-launching');
  if(introTween){introTween.kill();introTween=null;}
  if(introFrame){cancelAnimationFrame(introFrame);introFrame=0;}
  const reveal=['.world-hud','.hero-copy','.division-dock','.landmark-labels','.scene-tools','.fallback-button'];
@@ -37,15 +38,16 @@ function finishIntro({focus=true}={}){
 }
 function startIntro(){
  if(introDone||introRunning)return;
- introRunning=true;$('intro-start').disabled=true;sound.reveal();
- $('intro-status').textContent='Descending through the clouds…';
+ introRunning=true;document.body.classList.remove('intro-loaded');document.body.classList.add('expedition-launching');
+ $('intro-start').disabled=true;sound.reveal();
+ $('intro-status').textContent='Following the adventure trail through the clouds…';
  if(!world||!motionEnabled||reduceMotion()){finishIntro();return;}
  const progress={value:0},gsap=window.gsap;
  if(gsap){
   introTween=gsap.timeline({onComplete:()=>finishIntro()});
-  introTween.to('#intro-content',{opacity:0,y:-28,duration:.8,ease:'power2.inOut'},0)
-   .to('#intro-bottom',{opacity:0,duration:.6},0)
-   .to('#intro-atmosphere',{opacity:.08,scale:1.28,duration:4.4,ease:'power1.inOut'},.7)
+  introTween.to('#intro-content',{opacity:0,y:-35,scale:.975,duration:1.05,ease:'power2.inOut'},.15)
+   .to('#intro-bottom',{opacity:0,duration:.8},0)
+   .to('#intro-atmosphere',{opacity:.08,scale:1.35,duration:4.4,ease:'power1.inOut'},.7)
    .to('#intro-sky-veil',{opacity:0,duration:3.1,ease:'power2.inOut'},1.0)
    .to('#intro-sunlight',{opacity:0,duration:3.1,ease:'power2.in'},1.25)
    .to(progress,{value:1,duration:5.3,ease:'power2.inOut',onUpdate:()=>world?.setIntroProgress(progress.value)},.25)
@@ -391,14 +393,18 @@ async function start(){
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
  renderDivisionMenu();fillSummary();
  const labelsRoot=$('landmark-labels');try{
-  const mod=await import('./world.js?v=1.5.0');
+  const mod=await import('./world.js?v=1.6.0');
   world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,onHover:()=>sound.hover(),motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
  sceneReady=true;
  document.body.classList.remove('fallback-boot');
  $('intro-start').disabled=false;
- $('intro-status').textContent=world?'Your 3D world is ready.':'A 2D journey is available on this device.';
+ $('intro-status').textContent=world?'Your expedition is ready.':'An accessible 2D adventure is ready.';
+ if(!introDone&&showIntroOnEntry()&&!reduceMotion()){
+   document.body.classList.add('intro-loaded');
+   setTimeout(()=>document.body.classList.remove('intro-loaded'),2200);
+ }
  if(window.MADDIE_INTRO?.dismissed||!showIntroOnEntry())finishIntro({focus:false});
  else if(world)window.MADDIE_INTRO?.ready();
  else window.MADDIE_INTRO?.fail();
