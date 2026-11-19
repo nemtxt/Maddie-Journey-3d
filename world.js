@@ -247,7 +247,8 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       const sy=(-projected.y*.5+.5)*rect.height+rect.top-stageRect.top;
       const behind=projected.z>1||projected.z< -1;
       label.style.left=sx+'px';label.style.top=sy+'px';
-      label.style.opacity=behind||sx<10||sx>stage.clientWidth-10||sy<20||sy>stage.clientHeight-30?'0':'1';
+      const offscreen=behind||sx<10||sx>stage.clientWidth-10||sy<20||sy>stage.clientHeight-30;
+      label.style.opacity=offscreen?'0':active&&d.id!==active?'.42':'1';
       label.style.pointerEvents=label.style.opacity==='0'?'none':'auto';
     });
   }
