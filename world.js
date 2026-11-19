@@ -2,11 +2,41 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.m
 import {buildDivisionDistrict,enhanceTerrain,enhanceForest} from './world-assets.js?v=1.3.0';
 
 /** A lightweight bespoke Three.js diorama, no downloadable models or premium assets. */
-export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=true,intro=true}) {
+export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{},motionEnabled=true,intro=true}) {
   const stage=canvas.closest('.world-stage');
   const scene=new THREE.Scene();
   scene.background=new THREE.Color('#d6eef0');
   scene.fog=new THREE.FogExp2('#d6eef0',0.0032);
+  // A physically large gradient sky dome keeps the aerial intro and world in one
+  // continuous scene while adding a soft painterly sunrise and horizon haze.
+  const skyDome=new THREE.Mesh(
+    new THREE.SphereGeometry(290,36,20),
+    new THREE.ShaderMaterial({
+      side:THREE.BackSide,depthWrite:false,fog:false,
+      vertexShader:`
+        varying vec3 vSkyDirection;
+        void main() {
+          vSkyDirection=normalize(position);
+          gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+        }
+      `,
+      fragmentShader:`
+        precision mediump float;
+        varying vec3 vSkyDirection;
+        void main(){
+          vec3 dir=normalize(vSkyDirection);
+          float horizon=clamp(dir.y*.66+.43,0.0,1.0);
+          vec3 low=vec3(.89,.955,.93);
+          vec3 high=vec3(.63,.85,.91);
+          vec3 col=mix(low,high,smoothstep(.03,.92,horizon));
+          float light=pow(max(dot(dir,normalize(vec3(-.43,.71,.48))),0.0),24.0);
+          col+=vec3(1.0,.87,.59)*light*.19;
+          gl_FragColor=vec4(col,1.0);
+        }
+      `
+    })
+  );
+  skyDome.frustumCulled=false;skyDome.renderOrder=-100;scene.add(skyDome);
   const camera=new THREE.PerspectiveCamera(39,1,.1,420);
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
   const gl=renderer.getContext();
@@ -26,6 +56,8 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   sun.shadow.camera.left=-75;sun.shadow.camera.right=75;sun.shadow.camera.top=75;sun.shadow.camera.bottom=-75;
   sun.shadow.camera.near=1;sun.shadow.camera.far=190;sun.shadow.bias=-.00012;
   const rim=new THREE.DirectionalLight(0xc3e7e9,.73);rim.position.set(50,44,-58);scene.add(rim);
+  const districtGlow=new THREE.PointLight(0xffefbe,0,36,2);
+  districtGlow.position.set(0,12,0);scene.add(districtGlow);
   const world=new THREE.Group();scene.add(world);
   const mat=(hex,rough=1)=>new THREE.MeshStandardMaterial({color:hex,roughness:rough,metalness:0,flatShading:true});
   const grass=mat('#75b68c'),grassLight=mat('#9acb8b'),grassDark=mat('#487e62'),cliff=mat('#636b70'),stone=mat('#879198'),snow=mat('#f0f4f0'),soil=mat('#8c7762'),sand=mat('#e6cf94'),water=new THREE.MeshPhysicalMaterial({color:'#69c4d8',roughness:.19,metalness:.07,clearcoat:.85,clearcoatRoughness:.16,transparent:true,opacity:.89}),foam=mat('#d2f9fa'),wood=mat('#9b704d'),roofRed=mat('#d66d59'),roofBlue=mat('#5d9fb1'),gold=mat('#e9d27f'),goldGlow=new THREE.MeshBasicMaterial({color:'#fff3af'});
@@ -33,6 +65,22 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   const cylinder=(rt,rb,h,seg,color,x,y,z)=>{const obj=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),color);obj.position.set(x,y,z);world.add(obj);return obj;};
   function seeded(seed=9){let s=seed;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296);}
   const rand=seeded(340);
+  // Sparse firefly/dust particles create depth without expensive postprocessing.
+  const particleCount=lowQuality?58:170;
+  const motesPositions=new Float32Array(particleCount*3);
+  for(let i=0;i<particleCount;i++){
+    const a=rand()*6.283,rr=Math.sqrt(rand());
+    motesPositions[i*3]=Math.cos(a)*rr*46;
+    motesPositions[i*3+1]=3+rand()*23;
+    motesPositions[i*3+2]=Math.sin(a)*rr*29;
+  }
+  const motesGeometry=new THREE.BufferGeometry();
+  motesGeometry.setAttribute('position',new THREE.BufferAttribute(motesPositions,3));
+  const motes=new THREE.Points(motesGeometry,new THREE.PointsMaterial({
+    color:0xfff0bf,size:lowQuality?.44:.63,sizeAttenuation:true,transparent:true,
+    opacity:.42,depthWrite:false,blending:THREE.AdditiveBlending
+  }));
+  world.add(motes);
   // Irregular stepped floating island, grassy plateau and layered geological underside.
   for(const [rt,rb,h,y,c] of [[52,47,5,-2,grassDark],[49,39,9,-8,soil],[39,21,8,-16,cliff],[25,10,7,-23,stone]]){
     const ring=cylinder(rt,rb,h,17,c,0,y,0);ring.scale.z=.7;ring.rotation.y=.09;
@@ -189,6 +237,8 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     const small=document.createElement('small');small.textContent=d.short+' · '+String(i+1).padStart(2,'0');words.append(small);
     btn.append(dot,words);btn.setAttribute('aria-label','Explore '+d.name);btn.setAttribute('aria-pressed','false');
     btn.addEventListener('click',()=>{focus(d.id);onSelect(d.id,{fromWorld:true});});
+    btn.addEventListener('pointerenter',()=>onHover(d.id));
+    btn.addEventListener('focus',()=>onHover(d.id));
     labelsRoot.append(btn);nameNodes.set(d.id,btn);
   });
   const overviewX=window.innerWidth>=1100?-7:0;
@@ -222,10 +272,11 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   }
   function fitRadius(){return Math.max(107,100/(2*Math.tan(39*Math.PI/360)*camera.aspect));}
   function focus(id){const d=districts.find(item=>item.id===id);if(!d)return;
+    districtGlow.position.set(d.x,16,d.z);districtGlow.color.set(d.color);districtGlow.intensity=lowQuality?.2:1.15;
     active=id;orbit.target.set(d.x,4,d.z);orbit.rDesired=Math.max(70,fitRadius()*.78);orbit.thetaDesired=.34;orbit.phiDesired=1;
     nameNodes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===id)));
   }
-  function reset(){touring=false;active=null;orbit.target.set(overviewX,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
+  function reset(){touring=false;active=null;districtGlow.intensity=0;orbit.target.set(overviewX,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
     nameNodes.forEach(b=>b.setAttribute('aria-pressed','false'));}
   function zoom(delta){const fit=fitRadius();orbit.rDesired=THREE.MathUtils.clamp(orbit.rDesired+delta,Math.max(49,fit*.58),Math.max(146,fit*1.55));}
   function startTour(){tourT=0;tourIndex=-1;touring=true;active=null;}
@@ -234,7 +285,12 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
   function pick(event){const rect=canvas.getBoundingClientRect();mouse.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const hit=raycaster.intersectObjects(hitTargets,false)[0];if(hit){const id=hit.object.userData.district;focus(id);onSelect(id,{fromWorld:true});}}
   canvas.addEventListener('pointerdown',e=>{pointer.down=true;pointer.drag=false;pointer.x=e.clientX;pointer.y=e.clientY;pointer.theta=orbit.thetaDesired;pointer.phi=orbit.phiDesired;canvas.setPointerCapture(e.pointerId);});
-  canvas.addEventListener('pointermove',e=>{if(!pointer.down){const rect=canvas.getBoundingClientRect();mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);canvas.style.cursor=raycaster.intersectObjects(hitTargets,false).length?'pointer':'grab';return;}const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>6)pointer.drag=true;if(pointer.drag){touring=false;orbit.thetaDesired=pointer.theta-dx*.005;orbit.phiDesired=THREE.MathUtils.clamp(pointer.phi+dy*.004,.46,1.48);}});
+  let lastHoveredId=null;
+  canvas.addEventListener('pointermove',e=>{if(!pointer.down){const rect=canvas.getBoundingClientRect();mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);
+    const hovered=raycaster.intersectObjects(hitTargets,false)[0]?.object.userData.district||null;
+    canvas.style.cursor=hovered?'pointer':'grab';
+    if(hovered&&hovered!==lastHoveredId)onHover(hovered);
+    lastHoveredId=hovered;return;}const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>6)pointer.drag=true;if(pointer.drag){touring=false;orbit.thetaDesired=pointer.theta-dx*.005;orbit.phiDesired=THREE.MathUtils.clamp(pointer.phi+dy*.004,.46,1.48);}});
   canvas.addEventListener('pointerup',e=>{if(pointer.down&&!pointer.drag)pick(e);pointer.down=false;});
   canvas.addEventListener('pointercancel',()=>{pointer.down=false;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();touring=false;zoom(Math.sign(e.deltaY)*6);},{passive:false});
@@ -279,6 +335,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
     }
     animatedForest.update(time,animate);
+    if(animate){motes.rotation.y=Math.sin(time*.000085)*.015;motes.position.y=Math.sin(time*.0002)*.5;}
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
       waterRipples.forEach((r,i)=>{r.scale.setScalar(.6+((time*.00017+i*.22)%1)*1.3);r.material.opacity=.38*(1-(time*.00017+i*.22)%1);});
       animatedDistrictAssets.forEach((a,i)=>{
