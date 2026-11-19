@@ -171,7 +171,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     orbit.radius=THREE.MathUtils.lerp(orbit.radius,orbit.rDesired,easing);
     orbit.focus.lerp(orbit.target,easing);
     desiredPosition.set(orbit.focus.x+Math.sin(orbit.theta)*Math.sin(orbit.phi)*orbit.radius,orbit.focus.y+Math.cos(orbit.phi)*orbit.radius,orbit.focus.z+Math.cos(orbit.theta)*Math.sin(orbit.phi)*orbit.radius);
-    camera.position.lerp(desiredPosition,.15);camera.lookAt(orbit.focus);
+    camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
       falls.material.opacity=.76+Math.sin(time*.003)*.09;
       world.children.forEach(c=>{if(c.userData.waterfall)c.position.y+=Math.sin(time*.003+c.position.x)*.001;});
