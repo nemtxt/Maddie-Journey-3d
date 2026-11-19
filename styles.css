@@ -426,3 +426,19 @@ body:not(.view-world) .content-inner{max-width:1320px}
  .content-actions{gap:6px}
 }
 @media(prefers-reduced-motion:reduce){.division-headline{animation:none!important}.hud-control{transition:none!important}.atmo-light,.world-film-grain{display:none}}
+
+/* Bootstrap recovery remains visible when the application bundle or WebGL fails. */
+body.fallback-boot .focus-panel{
+ display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ transform:none!important;position:absolute!important;top:50%!important;right:auto!important;
+ left:50%!important;bottom:auto!important;width:min(410px,calc(100vw - 35px))!important;
+ max-height:calc(100dvh - 48px)!important;translate:-50% -50%;
+ background:rgba(252,255,251,.97);z-index:35;
+}
+body.fallback-boot .world-hud,
+body.fallback-boot .division-dock,
+body.fallback-boot .hero-copy,
+body.fallback-boot .division-headline,
+body.fallback-boot .scene-tools,
+body.fallback-boot .fallback-button,
+body.fallback-boot .world-instructions{display:none!important}
