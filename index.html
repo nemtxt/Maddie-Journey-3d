@@ -7,7 +7,7 @@
   <meta name="description" content="Maddie Journey — explore a miniature animated 3D world connected to 51 fictional employee profiles and 86 people and culture report routes.">
   <title>Maddie Journey — The World of People</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=1.2.1">
 </head>
 <body class="intro-active">
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -45,6 +45,7 @@
 
         <!-- One continuous Three.js world: the welcome screen overlays the sky camera before descent. -->
         <section class="sky-intro" id="sky-intro" aria-labelledby="intro-title">
+          <div class="intro-sky-veil" id="intro-sky-veil" aria-hidden="true"></div>
           <div class="intro-sunlight" aria-hidden="true"></div>
           <div class="intro-atmosphere" id="intro-atmosphere" aria-hidden="true">
             <div class="atmosphere-cloud cloud-one"></div>
@@ -56,11 +57,11 @@
             <div class="intro-eyebrow"><span></span> THE WORLD OF PEOPLE <span></span></div>
             <h1 id="intro-title">Welcome to<br><em>Maddie Journey</em></h1>
             <p>Every person has a path. Every story deserves to be discovered.</p>
-            <button type="button" class="intro-start" id="intro-start" disabled>
+            <button type="button" class="intro-start" id="intro-start">
               <span>Start</span>
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
             </button>
-            <div class="intro-status" id="intro-status" role="status" aria-live="polite">Preparing your journey…</div>
+            <div class="intro-status" id="intro-status" role="status" aria-live="polite">Press Start to explore the world.</div>
           </div>
           <button type="button" class="intro-skip" id="intro-skip">Skip intro <span aria-hidden="true">↗</span></button>
           <div class="intro-bottom" aria-hidden="true"><span>PEOPLE · PURPOSE · PROGRESS</span><span>SCROLL THROUGH THE SKY AND DISCOVER MORE</span><span>EST. 2026</span></div>
@@ -139,7 +140,67 @@
     <div id="employee-details"></div>
   </dialog>
 
+
+  <!-- Works even if the module or WebGL takes too long to initialize. -->
+  <script>
+  (function(){
+    'use strict';
+    var start=document.getElementById('intro-start');
+    var skip=document.getElementById('intro-skip');
+    var status=document.getElementById('intro-status');
+    var sceneReady=false,handlers=null,pending=false,watchdog=0,closed=false;
+    function fallback(message){
+      if(closed)return;
+      closed=true;pending=false;clearTimeout(watchdog);
+      document.body.classList.remove('intro-active');
+      document.getElementById('sky-intro').hidden=true;
+      var stage=document.getElementById('world-stage');
+      var world=document.getElementById('world-fallback');
+      if(stage)stage.classList.add('is-2d');
+      if(world)world.hidden=false;
+      if(!handlers){
+        var panel=document.getElementById('panel-content');
+        if(panel){
+          panel.replaceChildren();
+          var heading=document.createElement('h2');heading.textContent='Explore Maddie Journey';
+          var copy=document.createElement('p');copy.textContent=message||'The interactive world is temporarily unavailable. You can still open the original fictional dashboard.';
+          var link=document.createElement('a');link.className='primary-btn';link.textContent='Open fictional dashboard ↗';
+          link.href='https://nemtxt.github.io/Maddie-Journey-Prototype/#overview';link.target='_blank';link.rel='noopener noreferrer';
+          panel.append(heading,copy,link);
+        }
+      }
+    }
+    window.MADDIE_INTRO={
+      get dismissed(){return closed;},
+      register:function(onStart,onSkip){handlers={onStart:onStart,onSkip:onSkip};},
+      ready:function(){
+        if(closed)return;
+        sceneReady=true;status.textContent='Your world is ready.';
+        if(pending){pending=false;clearTimeout(watchdog);handlers&&handlers.onStart();}
+      },
+      fail:function(){sceneReady=true;status.textContent='2D mode is ready.';if(pending){pending=false;clearTimeout(watchdog);handlers&&handlers.onStart();}},
+      isReady:function(){return sceneReady;}
+    };
+    start.addEventListener('click',function(){
+      if(closed)return;
+      if(sceneReady&&handlers){handlers.onStart();return;}
+      pending=true;start.disabled=true;status.textContent='Opening the world…';
+      clearTimeout(watchdog);
+      watchdog=setTimeout(function(){
+        if(!closed&&!sceneReady){
+          start.disabled=false;
+          fallback('The 3D renderer did not finish loading. Try refreshing, or use the original fictional dashboard.');
+        }
+      },7000);
+    });
+    skip.addEventListener('click',function(){
+      clearTimeout(watchdog);pending=false;
+      if(handlers){handlers.onSkip();closed=true;}
+      else fallback('Intro skipped. The fictional dashboard remains available.');
+    });
+  })();
+  </script>
   <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=1.2.1"></script>
 </body>
 </html>
