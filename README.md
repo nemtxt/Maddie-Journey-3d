@@ -1,18 +1,40 @@
 # Maddie Journey — Interactive 3D World
 
-**V1.5 · Dream Factory-inspired Scenic World · November 2026**
+**V1.6 · Adventure Journey Edition · November 2026**
 
 An Awwwards-inspired, interactive miniature world for exploring the Maddie Journey People & Culture reporting environment. This project is deliberately **separate from** [the original fictional prototype](https://github.com/nemtxt/Maddie-Journey-Prototype), which has not been changed.
 
 ## V1.1 — Sky-to-island cinematic entrance
 
-The default root / `#overview` opens a full-screen, atmospheric sky with animated cloud layers, the headline **Welcome to Maddie Journey**, and one **Start** action. It deliberately uses the **same Three.js scene and WebGL renderer** as the floating island—no scene swap or video overlay.
+The default root / `#overview` opens a full-screen, atmospheric sky with animated cloud layers, the headline **Welcome to Maddie Journey**, and one **Begin Adventure** action. It deliberately uses the **same Three.js scene and WebGL renderer** as the floating island—no scene swap or video overlay.
 
 **On Start:** GSAP coordinates the welcome typography fade, atmospheric cloud reveal, continuous Bezier camera descent, and the arrival of the existing world navigation and reports. The in-scene 3D clouds drift gently throughout. The camera path ends at the original orbit control target.
 
 **Accessibility and graceful fallbacks:** Skip intro is always available; reduced-motion visitors transition directly to the world; the camera descent uses requestAnimationFrame if GSAP fails to load; an existing 2D fallback is shown if WebGL fails. Deep links into employee and report routes bypass the entrance. Controls remain keyboard navigable.
 
 **Dependencies:** Three.js 0.161.0 and GSAP 3.12.5 are served from jsDelivr; no account, billing, server-side rendering or paid animation plugins are required. A network connection is needed to load these libraries.
+
+## V1.6 — Adventure Journey Expedition
+
+The entry sequence is now themed as an **expedition through people, purpose and progress**. It retains the single, continuous Three.js sky-to-island camera journey, the original 8 division destinations and all monitoring routes.
+
+**Cinematic introduction**
+- Original SVG flight route with waypoint dots and a dotted map trail, giant animated CSS compass, soft wind streaks, and two floating explorer field notes.
+- A collectible-looking introduction label, an **08 Destinations / 01 Floating World** counter, and a bold **Begin Adventure** call-to-action with an embedded compass sparkle and luminous edging.
+- Decorative assets animate with a staged CSS entrance after 3D readiness. Start triggers the animated route traversal while GSAP coordinates the established cloud-to-island camera descent.
+- If GSAP is unavailable, the existing requestAnimationFrame camera fallback still works. Motion-reduction preferences disable decorative animation while keeping core navigation usable.
+
+**Visual language**
+- Free Google Fonts **Fraunces** (adventure-editorial display headings) + **DM Sans** (legible UI and monitoring text), with offline-safe Georgia and system font stacks.
+- Expedition-style buttons, decorative waypoint lines, numbered division badges, a compact explorer HUD compass, and clear focus outlines.
+- Mobile rules simplify field notes and reduce compass dimensions to avoid blocking the Start button.
+
+**New original 3D assets** in `adventure-assets.js`
+- Eight lightly animated division pennants, hand-built wooden signposts, numbered **EXPEDITION OUTPOST** placards, ground medallions and small expedition stones or rolled maps.
+- A miniature field map and compass at the People & Culture gateway. The outposts reuse existing Three.js geometry and share materials wherever practical.
+- No paid asset packs, images, proprietary icons, or copyrighted music have been added. Sound remains explicitly opt-in.
+
+**Data and deployment:** The original fictional-data snapshot is unchanged (51 profiles, eight source groups). Eight company-world destinations, nine reporting workspaces and all 86 report routes are retained. Repository source and browser regression workflows check these invariants and verify the new intro and outposts.
 
 ## V1.5 — Floating island environment detail
 
