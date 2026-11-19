@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import {DIVISIONS,divisionForWorkspace} from '../divisions.js';
 
 const root=resolve(import.meta.dirname,'..');
 const read=(name)=>readFileSync(resolve(root,name),'utf8');
@@ -89,4 +90,46 @@ test('Start descends through clouds in one continuous Three.js scene with safe f
  assert.ok(world.includes('if(introState.active)'));
  assert.ok(world.includes('if(!introState.active)updateLabels()'));
  assert.ok(app.includes('reduceMotion()'));
+});
+
+
+test('3D map uses eight precise company divisions and assigned evaluators',()=>{
+ const expected=[
+  ['hr','GIEZELLE','KURT'],
+  ['revenue','TRIZIA BALDOVI','Chief Experience Officer'],
+  ['design','AR. AJ TRABADO','Design Operations Manager'],
+  ['corporate','RENATO RENDON','ZSARINA MAE LACUMBA'],
+  ['media','MICHELLE OROCIO','Media Manager'],
+  ['it','INIGO ARELLANO','COO'],
+  ['gencon','INIGO ARELLANO','COO'],
+  ['business','MA. CRISTINE ORTIZ','Business Development Head']
+ ];
+ assert.equal(DIVISIONS.length,8);
+ assert.equal(new Set(DIVISIONS.map(d=>d.id)).size,8);
+ for(let i=0;i<expected.length;i++){
+  const [id,name,role]=expected[i],division=DIVISIONS[i];
+  assert.equal(division.id,id);
+  assert.ok(JSON.stringify(division.evaluators).includes(name));
+  assert.ok(JSON.stringify(division.evaluators).includes(role));
+  assert.ok(division.workspaces.every(id=>manifest.workspaces.some(w=>w.id===id)));
+  assert.ok(Math.abs(division.x)<48&&Math.abs(division.z)<33);
+ }
+ assert.ok(divisionForWorkspace('people'));
+ assert.ok(divisionForWorkspace('scoreboard'));
+});
+
+test('project assets and forest are procedural, weather animated and licensed without downloads',()=>{
+ const world=read('world.js'),assets=read('world-assets.js'),app=read('app.js');
+ assert.ok(world.includes("buildDivisionDistrict(THREE,world,d)"));
+ assert.ok(assets.includes("switch(d.id)"));
+ assert.ok(assets.includes("new THREE.InstancedMesh"));
+ assert.ok(assets.includes("uForestWind"));
+ assert.ok(world.includes("animatedForest.update(time,animate)"));
+ assert.ok(world.includes("shadowMap.enabled=true"));
+ assert.ok(world.includes("MeshPhysicalMaterial"));
+ assert.ok(world.includes("waterRipples.forEach"));
+ assert.ok(app.includes("DISTRICTS=DIVISIONS"));
+ assert.ok(app.includes("evaluator-person"));
+ assert.ok(app.includes("divisionForWorkspace"));
+ assert.ok(!assets.includes('https://'));
 });
