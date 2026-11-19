@@ -6,6 +6,8 @@ on:
       - 'index.html'
       - 'app.js'
       - 'world.js'
+      - 'world-assets.js'
+      - 'divisions.js'
       - 'styles.css'
       - 'tests/browser-smoke.mjs'
       - '.github/workflows/browser-intro.yml'
