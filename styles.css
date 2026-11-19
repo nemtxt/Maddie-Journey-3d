@@ -332,6 +332,7 @@ body:not(.has-division-selection) .hero-copy{top:clamp(143px,21vh,238px);max-wid
 body:not(.has-division-selection) .hero-copy h1{font-size:clamp(48px,5vw,73px)}
 body:not(.has-division-selection) .focus-panel{display:none!important}
 body.has-division-selection:not(.details-open) .focus-panel{visibility:hidden;opacity:0;pointer-events:none;transform:translateX(22px)}
+.focus-panel[hidden]{display:none!important}
 body.has-division-selection.details-open .focus-panel{visibility:visible;opacity:1;pointer-events:auto;transform:translateX(0)}
 .focus-panel{
   position:absolute;z-index:26;top:clamp(86px,12vh,132px)!important;right:24px!important;
