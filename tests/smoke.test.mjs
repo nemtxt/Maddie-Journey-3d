@@ -48,3 +48,35 @@ test('required interactive world and UI behaviors are implemented',()=>{
  assert.ok(world.includes('updateLabels'));
  assert.ok(read('styles.css').includes('prefers-reduced-motion'));
 });
+
+
+test('welcome scene is fullscreen and Start is accessible after loading',()=>{
+ const html=read('index.html'),css=read('styles.css');
+ assert.ok(html.includes('class="intro-active"'));
+ assert.ok(html.includes('id="sky-intro" aria-labelledby="intro-title"'));
+ assert.ok(html.includes('Welcome to'));
+ assert.ok(html.includes('Maddie Journey.'));
+ assert.ok(html.includes('id="intro-start" disabled'));
+ assert.ok(html.includes('id="intro-skip"'));
+ assert.ok(html.includes('gsap@3.12.5/dist/gsap.min.js'));
+ assert.ok(css.includes('body.intro-active #world-stage'));
+ assert.ok(css.includes('height:100dvh'));
+ assert.ok(css.includes('.atmosphere-cloud'));
+});
+
+test('Start descends through clouds in one continuous Three.js scene with safe fallback',()=>{
+ const app=read('app.js'),world=read('world.js');
+ for(const hook of ['startIntro','finishIntro','showIntroOnEntry','setIntroProgress','endIntro'])assert.ok((app+world).includes(hook));
+ assert.ok(app.includes('introTween=gsap.timeline'));
+ assert.ok(app.includes('duration:5.3'));
+ assert.ok(app.includes("!introDone"));
+ assert.ok(app.includes('requestAnimationFrame(step)'));
+ assert.ok(world.includes('const introState='));
+ assert.ok(world.includes('const skyClouds='));
+ assert.ok(world.includes('scene.add(group)'));
+ assert.ok(world.includes('bezierInto(introCameraPoint'));
+ assert.ok(world.includes('bezierInto(introLookPoint'));
+ assert.ok(world.includes('if(introState.active)'));
+ assert.ok(world.includes('if(!introState.active)updateLabels()'));
+ assert.ok(app.includes('reduceMotion()'));
+});
