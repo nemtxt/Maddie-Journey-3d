@@ -9,6 +9,7 @@ on:
       - 'world-assets.js'
       - 'divisions.js'
       - 'styles.css'
+      - 'soundscape.js'
       - 'tests/browser-smoke.mjs'
       - '.github/workflows/browser-intro.yml'
   workflow_dispatch:
