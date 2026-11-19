@@ -60,7 +60,7 @@ export function buildDivisionDistrict(THREE,root,d){
     // CanvasTexture creates in-scene wayfinding and reporting props, entirely original.
     const canvas=document.createElement('canvas');canvas.width=640;canvas.height=280;
     const g=canvas.getContext('2d');
-    g.fillStyle='#173d4c';g.beginPath();g.roundRect(8,8,624,260,30);g.fill();
+    g.fillStyle='#173d4c';g.beginPath();if(typeof g.roundRect==='function')g.roundRect(8,8,624,260,30);else g.rect(8,8,624,260);g.fill();
     g.fillStyle=accent;g.fillRect(35,36,120,8);
     g.fillStyle='#fafcf5';g.font='700 55px Arial, sans-serif';g.textAlign='center';
     const words=text.split(' '),line1=words.length>2?words.slice(0,Math.ceil(words.length/2)).join(' '):text;
