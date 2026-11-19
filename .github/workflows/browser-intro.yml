@@ -7,6 +7,7 @@ on:
       - 'app.js'
       - 'world.js'
       - 'world-assets.js'
+      - 'dream-details.js'
       - 'divisions.js'
       - 'styles.css'
       - 'soundscape.js'
