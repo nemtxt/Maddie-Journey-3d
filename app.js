@@ -101,14 +101,14 @@ function showView(view){
  if(!inWorld)world?.stopTour();
 }
 function clearDistrict(){
- selectedDistrict=null;world?.reset();
+ selectedDistrict=null;document.body.classList.remove('has-division-selection');world?.reset();
  $('panel-kicker').textContent='DIVISION GUIDE / 01—08';
  $('panel-content').innerHTML='<div class="panel-feature-icon">✳</div><h2>Discover eight division districts.</h2><p>Select a landmark to see its evaluator team, environmental identity and linked monitoring workspaces.</p><div class="guide-divider"></div><p class="small-note">The original nine monitoring workspaces and all fictional reports remain intact.</p>';
  paintStrip();
 }
 function selectDistrict(id,{fromTour=false,fromRoute=false}={}){
  const d=DISTRICTS.find(x=>x.id===id);if(!d)return;
- selectedDistrict=d.id;$('panel-kicker').textContent='COMPANY DIVISION / '+d.marker+'—08';
+ selectedDistrict=d.id;document.body.classList.add('has-division-selection');$('panel-kicker').textContent='COMPANY DIVISION / '+d.marker+'—08';
  const names=d.evaluators.map(p=>'<div class="evaluator-person"><span class="evaluator-avatar" aria-hidden="true">'+safe(initials(p.name))+'</span><span><strong>'+safe(p.name)+'</strong><small>'+safe(p.role)+'</small></span></div>').join('');
  const related=d.workspaces.map(wspace).filter(Boolean);
  $('panel-content').innerHTML='<div class="panel-tag" style="background:'+safe(d.color)+'26;color:#345d64">DIVISION DESTINATION</div>'+
