@@ -443,3 +443,159 @@ body.fallback-boot .division-headline,
 body.fallback-boot .scene-tools,
 body.fallback-boot .fallback-button,
 body.fallback-boot .world-instructions{display:none!important}
+
+/* V1.6 — Adventure Journey: a cohesive expedition-themed identity.
+   All illustrated compass, flight-path and field-note assets are original CSS/SVG. */
+:root{--exp-ink:#224952;--exp-pine:#266b64;--exp-gold:#dfaa58;--exp-paper:#fff9eb;--exp-mist:#d8eef0}
+body{font-family:"DM Sans",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.sky-intro{background:transparent}
+.intro-sky-veil{background:
+  radial-gradient(circle at 54% 23%,rgba(255,246,211,.96) 0,rgba(255,252,232,.50) 15%,transparent 46%),
+  radial-gradient(ellipse at 54% 92%,rgba(206,235,227,.83),transparent 55%),
+  linear-gradient(180deg,#bfe4ec 0%,#d9f0ed 52%,#f0f5e7 100%)}
+.sky-intro::before{content:"";position:absolute;inset:7px;z-index:3;pointer-events:none;border:1px solid rgba(255,255,255,.27);border-radius:13px}
+.expedition-graphics{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.expedition-compass{position:absolute;top:clamp(60px,12vh,120px);left:clamp(28px,8vw,155px);width:clamp(105px,13.5vw,180px);height:clamp(105px,13.5vw,180px);opacity:.75;filter:drop-shadow(0 12px 30px rgba(56,99,92,.09));animation:expedition-compass-float 12s ease-in-out infinite alternate}
+.compass-ring{position:absolute;border-radius:50%;inset:0;border:1px solid rgba(51,117,114,.38)}
+.compass-ring.ring-outer{background:conic-gradient(from -25deg,transparent 0 39deg,rgba(211,156,73,.55) 40deg 44deg,transparent 45deg 129deg,rgba(211,156,73,.55) 130deg 134deg,transparent 135deg 219deg,rgba(211,156,73,.55) 220deg 224deg,transparent 225deg 309deg,rgba(211,156,73,.55) 310deg 314deg,transparent 315deg);border:1px dashed rgba(68,115,113,.48);outline:1px solid rgba(251,253,237,.58);outline-offset:7px}
+.compass-ring.ring-inner{inset:18%;border:1px solid rgba(62,113,107,.40);background:rgba(255,252,237,.15);box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+.compass-north,.compass-south,.compass-east,.compass-west{position:absolute;font-size:10px;letter-spacing:2px;font-weight:800;color:#397b78}
+.compass-north{top:7%;left:50%;transform:translateX(-50%);color:#c27857}
+.compass-south{bottom:6%;left:50%;transform:translateX(-50%)}
+.compass-east{right:7%;top:50%;transform:translateY(-50%)}
+.compass-west{left:7%;top:50%;transform:translateY(-50%)}
+.compass-needle{position:absolute;inset:24%;clip-path:polygon(50% 2%,63% 48%,50% 98%,37% 51%);background:linear-gradient(to bottom,#d5785d 0 49%,#2b7772 50%);transform:rotate(-28deg);filter:drop-shadow(0 2px 6px rgba(43,97,91,.19))}
+.compass-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:13px;height:13px;background:#fffae9;border:3px solid #bf8e59;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,.3)}
+.compass-orbit-label{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:800;letter-spacing:4px;color:rgba(42,104,103,.69)}
+.intro-flight-trail{position:absolute;inset:0;width:100%;height:100%;opacity:.5;filter:drop-shadow(0 2px 7px rgba(226,182,110,.28))}
+.trail-underlay{fill:none;stroke:rgba(255,253,231,.85);stroke-width:7;stroke-dasharray:1 19;stroke-linecap:round}
+.intro-flight-line{fill:none;stroke:url(#journeyTrail);stroke-width:2.5;stroke-dasharray:15 13;stroke-linecap:round;stroke-dashoffset:0}
+.intro-waypoint{fill:#fbf2d7;stroke:#d7a058;stroke-width:3;filter:drop-shadow(0 0 5px rgba(233,179,94,.55))}
+.expedition-float-note{position:absolute;display:grid;gap:9px;max-width:250px;padding:21px 23px;color:#3c7375;background:rgba(255,254,244,.33);border:1px solid rgba(255,255,255,.54);border-radius:10px 18px 12px 18px;box-shadow:0 20px 45px rgba(55,95,95,.06);backdrop-filter:blur(8px);transform:rotate(-3deg);animation:expedition-note-float 9s ease-in-out infinite alternate}
+.expedition-float-note::before{content:"";position:absolute;inset:6px;pointer-events:none;border:1px dashed rgba(94,142,128,.22);border-radius:8px 13px 9px 13px}
+.expedition-float-note.note-left{left:clamp(20px,5vw,80px);bottom:clamp(85px,17vh,180px);transform:rotate(-4deg)}
+.expedition-float-note.note-right{right:clamp(23px,6vw,100px);top:clamp(120px,28vh,320px);transform:rotate(4deg)}
+.expedition-float-note .float-note-index,.expedition-float-note small{font-size:9px;font-weight:800;letter-spacing:1.3px;color:#4c9188}
+.expedition-float-note strong{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:clamp(18px,1.7vw,24px);line-height:1.16;letter-spacing:-.8px;color:#2a6265}
+.expedition-float-note small{letter-spacing:.55px;color:#a27e4f}
+.expedition-wind{position:absolute;pointer-events:none;width:120px;height:8px;border-top:2px solid rgba(254,255,253,.65);border-radius:50%;filter:blur(.35px);animation:expedition-breeze 9s ease-in-out infinite}
+.expedition-wind.wind-a{top:30%;left:23%;animation-delay:-1.3s}
+.expedition-wind.wind-b{top:56%;right:15%;width:170px;animation-delay:-3.7s}
+.expedition-wind.wind-c{top:68%;left:17%;width:90px;animation-delay:-5.6s}
+.intro-content{z-index:4;max-width:990px;padding:30px 26px 68px;filter:drop-shadow(0 9px 21px rgba(227,243,235,.46))}
+.intro-edition{display:inline-flex;align-items:center;gap:14px;letter-spacing:2.1px;font-size:9px;color:#8e7a59;background:rgba(255,254,238,.69);border:1px solid rgba(255,255,255,.86);padding:9px 18px;border-radius:100px;margin-top:25px;font-weight:800}
+.intro-edition span{font-size:12px;color:#d99e64}
+.intro-content h1{font-family:"Fraunces",Georgia,serif;font-weight:700;font-variation-settings:"SOFT" 35,"WONK" 1;font-size:clamp(57px,7.9vw,115px);letter-spacing:-.055em;line-height:.98;margin:24px 0 16px;color:#214b54}
+.intro-content h1 .hero-welcome{display:block;font-size:.73em;font-weight:600;letter-spacing:-.052em}
+.intro-content h1 em{display:block;font-style:normal;font-weight:700;letter-spacing:-.062em;white-space:normal;color:#cc7664;text-shadow:0 4px 15px rgba(255,250,239,.65)}
+.intro-content .intro-deck{max-width:490px;font-size:clamp(13px,1.35vw,17px);line-height:1.7;margin:1px 0 19px;font-weight:600;color:#476c70}
+.intro-destination-count{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 15px;border:1px solid rgba(119,171,157,.25);border-radius:100px;background:rgba(247,254,247,.47);font-size:10px;font-weight:800;letter-spacing:1px;color:#53837b;margin-bottom:22px}
+.count-orbit{color:#c78b5c;font-size:17px;line-height:1}
+.count-divider{width:1px;height:13px;background:rgba(80,142,123,.43)}
+.intro-start.expedition-start{min-width:235px;min-height:64px;display:flex;justify-content:center;align-items:center;gap:13px;padding:14px 20px 14px 24px;color:#fffcf0;background:linear-gradient(115deg,#205c60,#286f66 54%,#1f5056);border:1px solid rgba(255,255,255,.55);font-family:"DM Sans",system-ui,sans-serif;font-size:14px;font-weight:800;letter-spacing:.25px;box-shadow:0 10px 0 -5px rgba(183,138,75,.63),0 24px 65px rgba(26,93,90,.25),inset 0 1px 0 rgba(255,255,255,.36);position:relative;overflow:hidden;isolation:isolate;transition:transform .3s,box-shadow .3s,filter .3s}
+.intro-start.expedition-start::before{content:"";position:absolute;inset:-50% auto -50% -45%;width:30%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.19),transparent);transform:rotate(24deg);transition:left .65s ease;z-index:-1}
+.intro-start.expedition-start:hover{transform:translateY(-4px) scale(1.015);filter:brightness(1.04);box-shadow:0 11px 0 -5px rgba(183,138,75,.58),0 30px 70px rgba(26,93,90,.27)}
+.intro-start.expedition-start:hover::before{left:120%}
+.intro-start.expedition-start:active{transform:translateY(1px) scale(.985)}
+.start-button-spark{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:#f7d9a6;background:rgba(255,255,255,.13);font-size:20px}
+.intro-start.expedition-start svg{margin-left:auto;width:19px;height:19px}
+.intro-status{font-weight:700;color:#618f8b;margin-top:15px}
+.intro-bottom{font-family:"DM Sans",sans-serif;color:rgba(38,99,99,.76);font-size:9px;font-weight:800;letter-spacing:1.35px;z-index:5}
+.intro-bottom b{margin:0 8px;color:#cc9968}.route-dots{font-style:normal;letter-spacing:4px;margin-right:10px;color:#cb9c59}
+.intro-skip{z-index:8;letter-spacing:.3px;transition:background .25s,transform .25s}
+.intro-skip:hover{transform:translateY(-2px)}
+.intro-audio-choice{transition:background .25s,transform .25s}.intro-audio-choice:hover{transform:translateY(-2px)}
+/* Animated expedition arrival, applied after the 3D module indicates ready. */
+.intro-loaded .intro-edition{animation:expedition-fade-up .7s .04s both}
+.intro-loaded .intro-content h1{animation:expedition-fade-up .95s .16s both}
+.intro-loaded .intro-deck{animation:expedition-fade-up .85s .32s both}
+.intro-loaded .intro-destination-count{animation:expedition-fade-up .75s .44s both}
+.intro-loaded .intro-start{animation:expedition-fade-up .77s .53s both}
+.intro-loaded .expedition-float-note{animation:expedition-note-float 9s ease-in-out infinite alternate}
+.intro-loaded .intro-flight-trail{animation:expedition-trail-arrival 2s ease-out both}
+body.expedition-launching .expedition-compass{animation:expedition-spin-off 5.1s cubic-bezier(.2,.6,.2,1) both}
+body.expedition-launching .intro-flight-line{stroke-dasharray:2400;stroke-dashoffset:2400;animation:expedition-draw-route 5s cubic-bezier(.21,.54,.1,1) both}
+body.expedition-launching .expedition-wind{animation-duration:1.3s}
+body.expedition-launching .expedition-float-note{opacity:0;transition:opacity .65s}
+body.expedition-launching .intro-waypoint{animation:expedition-waypoint-glow 1.25s ease-in-out infinite alternate}
+@keyframes expedition-fade-up{from{opacity:0;transform:translateY(24px);filter:blur(7px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes expedition-trail-arrival{from{opacity:0;transform:translateY(12px)}to{opacity:.5;transform:translateY(0)}}
+@keyframes expedition-trail-drift{to{stroke-dashoffset:-56}}
+@keyframes expedition-note-float{to{translate:0 -10px}}
+@keyframes expedition-compass-float{to{transform:translateY(-10px) rotate(5deg)}}
+@keyframes expedition-spin-off{0%{transform:translateY(0) rotate(0) scale(1);opacity:.75}70%{opacity:.85}100%{transform:translateY(-90px) rotate(110deg) scale(2);opacity:0}}
+@keyframes expedition-draw-route{from{stroke-dashoffset:2400;opacity:.4}to{stroke-dashoffset:0;opacity:1}}
+@keyframes expedition-waypoint-glow{to{filter:drop-shadow(0 0 12px #f7ca7d);stroke-width:5}}
+@keyframes expedition-breeze{0%,100%{opacity:0;transform:translateX(-50px)}50%{opacity:.8;transform:translateX(70px)}}
+/* Discovery-state hierarchy in the 3D world */
+.hud-identity{border-color:rgba(255,255,248,.83);background:rgba(250,255,250,.70)}
+.adventure-compass-symbol{display:grid;place-items:center;width:35px;height:35px;border:1px solid rgba(88,145,123,.22);border-radius:50%;background:rgba(226,242,233,.58);color:#347b70}
+.adventure-compass-symbol svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.hud-control{font-family:"DM Sans",sans-serif}
+.hud-control:hover{box-shadow:0 12px 28px rgba(37,72,78,.15)}
+body:not(.has-division-selection) .hero-copy h1,
+.division-headline h2{font-family:"Fraunces",Georgia,serif;letter-spacing:-.052em;font-weight:700;line-height:1.04}
+body:not(.has-division-selection) .hero-copy h1 em{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:700;letter-spacing:-.058em}
+.division-headline h2{font-size:clamp(48px,5.4vw,85px);line-height:1.06;letter-spacing:-.06em}
+.division-headline.is-long h2{font-size:clamp(37px,4.2vw,68px)}
+.division-route-ornament{display:flex;align-items:center;gap:7px;margin-bottom:16px;opacity:.78;color:#4d9184}
+.division-route-ornament>span{width:7px;height:7px;display:block;border-radius:50%;background:#d9a464;box-shadow:0 0 0 2px rgba(253,250,224,.86)}
+.division-route-ornament>span:nth-child(2){width:34px;height:1px;border-radius:0;box-shadow:none;background:repeating-linear-gradient(90deg,#7aada1 0 6px,transparent 6px 11px)}
+.division-route-ornament small{font-size:8px;font-weight:800;letter-spacing:1.7px;margin-left:8px}
+.division-headline-rule{height:3px;width:73px;background:linear-gradient(90deg,var(--division-glow,#d77e65),#f0d499)}
+.division-headline #division-subtitle{font-family:"Fraunces",Georgia,serif;font-weight:700}
+.division-headline .headline-primary,
+.hero-actions .primary-btn{position:relative;border-radius:14px 21px 15px 21px;border:1px solid rgba(255,255,255,.55);font-weight:800;background:linear-gradient(120deg,#255961,#2d786d);color:#fffbed;box-shadow:0 11px 0 -5px rgba(218,171,104,.43),0 17px 32px rgba(29,81,79,.18);transition:transform .25s,box-shadow .25s}
+.division-headline .headline-primary:hover,.hero-actions .primary-btn:hover{transform:translateY(-3px);box-shadow:0 14px 0 -5px rgba(218,171,104,.46),0 22px 32px rgba(29,81,79,.22)}
+.hero-actions .soft-btn,.division-headline .headline-quiet{border:1px solid rgba(74,137,128,.24);border-radius:14px 21px 15px 21px;backdrop-filter:blur(12px);background:rgba(255,254,242,.72);color:#2b615d;font-weight:800;transition:background .22s,transform .22s}
+.hero-actions .soft-btn:hover,.division-headline .headline-quiet:hover{transform:translateY(-2px);background:#fffcf1}
+.btn-compass{font-size:21px;line-height:1}
+.division-dock-trigger{border-radius:13px 19px 14px 19px;background:linear-gradient(130deg,rgba(27,72,78,.96),rgba(33,100,91,.94));box-shadow:0 10px 0 -6px #dbb378,0 22px 48px rgba(24,64,68,.21)}
+.division-dock-trigger:hover{background:linear-gradient(130deg,#28616a,#2c8173)}
+.division-dock-trigger .dock-mark{color:#efd39b;font-size:22px}
+.division-menu{border-radius:14px 23px 16px 23px}
+.division-menu-item{transition:background .2s,transform .2s}.division-menu-item:hover{transform:translateX(3px)}
+.division-menu-item .menu-number{display:grid;place-items:center;min-width:28px;min-height:27px;border-radius:8px;background:color-mix(in srgb,var(--item-accent),white 84%)}
+.division-menu-tour{background:linear-gradient(100deg,#dbeee5,#f4ead2)}
+.world-label{background:rgba(28,65,73,.89);border-color:rgba(255,250,221,.69);box-shadow:0 4px 0 -2px rgba(216,168,94,.51),0 14px 25px rgba(25,64,68,.21);transition:opacity .26s,transform .26s}
+.world-label:hover{background:rgba(29,81,80,.96)}
+.world-label .label-dot{box-shadow:0 0 0 4px rgba(239,210,148,.14)}
+.hud-control:focus-visible,.intro-start:focus-visible,.division-menu-item:focus-visible,.headline-primary:focus-visible,.headline-quiet:focus-visible,.division-dock-trigger:focus-visible,.world-label:focus-visible{outline:3px solid #e9a958;outline-offset:4px}
+@media(max-width:1100px){
+  .expedition-float-note.note-left{left:17px;bottom:95px}.expedition-float-note.note-right{right:20px;top:23%;max-width:180px}
+  .expedition-compass{left:28px;top:80px;opacity:.48}
+  .intro-content h1{font-size:clamp(53px,8.5vw,84px)}
+}
+@media(max-width:760px){
+  .expedition-float-note{display:none}
+  .expedition-compass{left:16px;top:78px;width:95px;height:95px;opacity:.36}
+  .intro-content{padding:44px 17px 65px}
+  .intro-content h1{font-size:clamp(42px,10.5vw,69px);margin:20px 0 13px}
+  .intro-content h1 em{white-space:normal}
+  .intro-edition{font-size:7px;letter-spacing:1.6px;margin-top:17px;padding:8px 12px}
+  .intro-content .intro-deck{font-size:12px;line-height:1.58;margin-bottom:16px}
+  .intro-destination-count{font-size:8px;gap:8px;margin-bottom:17px;padding:8px 10px}
+  .intro-start.expedition-start{min-height:58px;min-width:212px;font-size:12px}
+  .intro-bottom span:nth-child(2){display:none}
+  .division-headline h2{font-size:clamp(38px,6.8vw,61px)}
+  .division-headline.is-long h2{font-size:clamp(33px,5.8vw,50px)}
+  .division-route-ornament{margin-bottom:9px}
+}
+@media(max-width:440px){
+  .intro-eyebrow{font-size:7px;letter-spacing:1.5px}
+  .intro-content h1{font-size:clamp(38px,10.6vw,49px)}
+  .intro-content h1 .hero-welcome{font-size:.78em}
+  .intro-content h1 em{white-space:normal}
+  .intro-content .intro-deck{max-width:285px}
+  .expedition-compass{top:96px;left:12px;width:76px;height:76px;opacity:.26}
+  .compass-ring.ring-inner{inset:23%}.compass-north,.compass-south,.compass-east,.compass-west,.compass-orbit-label{font-size:7px}
+  .intro-bottom{font-size:7px}
+  .division-headline h2{font-size:40px}
+  .division-headline.is-long h2{font-size:33px}
+}
+@media(prefers-reduced-motion:reduce){
+  .intro-loaded .intro-edition,.intro-loaded .intro-content h1,.intro-loaded .intro-deck,.intro-loaded .intro-destination-count,
+  .intro-loaded .intro-start,.intro-loaded .intro-flight-trail,.expedition-compass,.expedition-float-note,.expedition-wind,
+  body.expedition-launching .expedition-compass,body.expedition-launching .intro-flight-line,body.expedition-launching .intro-waypoint{animation:none!important;transition:none!important}
+  .intro-start.expedition-start,.hero-actions .primary-btn,.division-headline .headline-primary,.division-menu-item{transition:none!important}
+}
