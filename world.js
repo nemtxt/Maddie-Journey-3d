@@ -57,10 +57,39 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     addTree(x,z,.5+rand()*.85,rand()<.33?'broad':'pine');
   }
   const animatedForest=enhanceForest(THREE,world,districts,{mobile:window.innerWidth<850});
-  // Mountain range: low-poly slopes, peaks, snow caps, foreground ridge.
+  // Layered mountain faces with irregular ridges, naturally varied rock strata
+  // and vertex-colored snowlines; no external textures or licensed models needed.
   function mountain(x,z,r,h,shade){
-    const rock=new THREE.Mesh(new THREE.ConeGeometry(r,h,7,3),shade);rock.position.set(x,1.5+h/2,z);rock.rotation.y=rand();world.add(rock);
-    const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.32,h*.26,7),snow);cap.position.set(x,1.5+h*.87,z);cap.rotation.y=rock.rotation.y;world.add(cap);
+    const geometry=new THREE.ConeGeometry(r,h,12,7);
+    const positions=geometry.attributes.position;
+    const colors=[];
+    const shadowRock=new THREE.Color('#64757b'),rockLight=new THREE.Color('#9a9f9f');
+    const snowRock=new THREE.Color('#edf2ef'),moss=new THREE.Color('#788b7a');
+    const baseSeed=rand()*100;
+    for(let i=0;i<positions.count;i++){
+      const px=positions.getX(i),py=positions.getY(i),pz=positions.getZ(i);
+      const angle=Math.atan2(pz,px),altitude=(py+h/2)/h;
+      const jagged=1+Math.sin(angle*4+baseSeed)*.13+Math.sin(angle*9+baseSeed*.63)*.065+
+        Math.cos(py*.4+angle*6)*.035;
+      positions.setX(i,px*jagged);
+      positions.setZ(i,pz*jagged);
+      const snowy=altitude>.76+Math.sin(angle*5+baseSeed)*.065;
+      const rockColor=snowy?snowRock:altitude<.21?moss:shadowRock.clone().lerp(rockLight,Math.max(0,Math.sin(angle*3+py*.27))*.68+.1);
+      colors.push(rockColor.r,rockColor.g,rockColor.b);
+    }
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+    geometry.computeVertexNormals();
+    const rock=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,flatShading:true}));
+    rock.position.set(x,1.5+h/2,z);rock.rotation.y=rand()*.6;
+    rock.castShadow=true;rock.receiveShadow=true;world.add(rock);
+    // Scattered rockfall at the base blends the mountains into the terrain.
+    for(let k=0;k<8;k++){
+      const a=rand()*Math.PI*2,t=r*(.72+rand()*.35);
+      const pebble=new THREE.Mesh(new THREE.DodecahedronGeometry(.55+rand()*1.3,0),stone);
+      pebble.position.set(x+Math.cos(a)*t,2,z+Math.sin(a)*t*.77);
+      pebble.scale.y=.48+rand()*.4;pebble.rotation.y=rand()*6.28;
+      pebble.castShadow=true;pebble.receiveShadow=true;world.add(pebble);
+    }
   }
   mountain(-9,-12,8.5,21,cliff);
   mountain(1,-14,10.5,29,stone);
