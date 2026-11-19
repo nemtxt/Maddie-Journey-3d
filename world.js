@@ -1,7 +1,7 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 
 /** A lightweight bespoke Three.js diorama, no downloadable models or premium assets. */
-export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=true}) {
+export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=true,intro=true}) {
   const stage=canvas.closest('.world-stage');
   const scene=new THREE.Scene();
   scene.background=new THREE.Color('#d6eef0');
@@ -113,6 +113,29 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     for(let j=0;j<4;j++){const puff=new THREE.Mesh(new THREE.IcosahedronGeometry(3+rand()*2,1),new THREE.MeshBasicMaterial({color:0xfffdf6,transparent:true,opacity:.8}));puff.scale.set(1.2,.68,1);puff.position.set(j*2.5,rand()*2,rand()*2);g.add(puff);}
     g.position.set(x,y,z);world.add(g);clouds.push({obj:g,x,y,z,speed:.3+rand()*.5});
   }
+  // Cumulus banks occupy the same 3D space as the island. The intro camera passes
+  // through them on descent; no scene swap, screenshot, or second renderer is used.
+  const skyClouds=[];
+  const cloudPalette=['#fffefa','#fcffff','#ecf8f7','#f5fcfc'];
+  const skyCloudMaterial=cloudPalette.map(color=>new THREE.MeshLambertMaterial({color,transparent:true,opacity:.84,depthWrite:false}));
+  function addSkyCloud(x,y,z,scale=1,seed=0){
+    const group=new THREE.Group();
+    for(let j=0;j<7;j++){
+      const part=new THREE.Mesh(new THREE.SphereGeometry((4.2+(j%3)*1.4)*scale,12,9),skyCloudMaterial[(j+seed)%skyCloudMaterial.length]);
+      part.scale.set(1.35,.57,.9);
+      part.position.set((j-3)*3.1*scale,Math.sin(j*1.7+seed)*1.3*scale,Math.cos(j+seed)*2.5*scale);
+      group.add(part);
+    }
+    group.position.set(x,y,z);scene.add(group);
+    skyClouds.push({group,baseX:x,phase:seed*1.6});
+  }
+  [
+    [-23,126,83,1.75],[25,128,76,1.6],[3,124,49,1.4],
+    [-24,111,103,1.45],[26,106,87,1.55],[0,101,75,1.35],
+    [-27,88,76,1.5],[25,83,63,1.5],[2,78,42,1.2],
+    [-38,66,48,1.45],[36,69,43,1.5]
+  ].forEach((p,i)=>addSkyCloud(...p,i));
+
   const nameNodes=new Map();districts.forEach((d,i)=>{
     const btn=document.createElement('button');btn.className='world-label';btn.type='button';btn.style.setProperty('--accent',accentColors[i]);
     const dot=document.createElement('span');dot.className='label-dot';
@@ -125,7 +148,31 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   const orbit={theta:.35,phi:1.01,radius:107,target:new THREE.Vector3(0,3,0),focus:new THREE.Vector3(0,3,0),rDesired:107,thetaDesired:.35,phiDesired:1.01};
   const desiredPosition=new THREE.Vector3(),projected=new THREE.Vector3();
   const pointer={down:false,drag:false,x:0,y:0,theta:0,phi:0};
-  let active=null,touring=false,tourT=0,tourIndex=-1,run=true,animate=true,last=performance.now(),raf=0,disposed=false;
+  let active=null,touring=false,tourT=0,tourIndex=-1,run=true,animate=Boolean(motionEnabled),last=performance.now(),raf=0,disposed=false;
+  const introState={active:Boolean(intro),progress:0};
+  const introCameraPoint=new THREE.Vector3(),introLookPoint=new THREE.Vector3();
+  const startEye=new THREE.Vector3(0,138,139);
+  const startTarget=new THREE.Vector3(0,132,-36);
+  function bezierInto(out,p,a,b,c,d){
+    const q=1-p;
+    return out.set(
+      q*q*q*a.x+3*q*q*p*b.x+3*q*p*p*c.x+p*p*p*d.x,
+      q*q*q*a.y+3*q*q*p*b.y+3*q*p*p*c.y+p*p*p*d.y,
+      q*q*q*a.z+3*q*q*p*b.z+3*q*p*p*c.z+p*p*p*d.z);
+  }
+  function setIntroProgress(value){introState.progress=THREE.MathUtils.clamp(Number(value)||0,0,1);}
+  function endIntro(){
+    introState.active=false;introState.progress=1;
+    orbit.theta=orbit.thetaDesired=.35;
+    orbit.phi=orbit.phiDesired=1.01;
+    orbit.radius=orbit.rDesired=fitRadius();
+    orbit.target.set(0,3,0);orbit.focus.copy(orbit.target);
+    desiredPosition.set(
+      orbit.focus.x+Math.sin(orbit.theta)*Math.sin(orbit.phi)*orbit.radius,
+      orbit.focus.y+Math.cos(orbit.phi)*orbit.radius,
+      orbit.focus.z+Math.cos(orbit.theta)*Math.sin(orbit.phi)*orbit.radius);
+    camera.position.copy(desiredPosition);camera.lookAt(orbit.focus);
+  }
   function fitRadius(){return Math.max(107,100/(2*Math.tan(39*Math.PI/360)*camera.aspect));}
   function focus(id){const d=districts.find(item=>item.id===id);if(!d)return;
     active=id;orbit.target.set(d.x,4,d.z);orbit.rDesired=Math.max(70,fitRadius()*.78);orbit.thetaDesired=.34;orbit.phiDesired=1;
@@ -146,7 +193,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   canvas.addEventListener('wheel',e=>{e.preventDefault();touring=false;zoom(Math.sign(e.deltaY)*6);},{passive:false});
   function resize(){const width=Math.max(1,stage.clientWidth),height=Math.max(1,stage.clientHeight);camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);if(!active&&!touring)orbit.rDesired=fitRadius();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);resize();
-  function updateLabels(){if(stage.classList.contains('is-2d'))return;const rect=canvas.getBoundingClientRect();const stageRect=stage.getBoundingClientRect();
+  function updateLabels(){if(introState.active||stage.classList.contains('is-2d'))return;const rect=canvas.getBoundingClientRect();const stageRect=stage.getBoundingClientRect();
     districts.forEach((d,i)=>{const label=nameNodes.get(d.id);
       projected.copy(anchors[i]).project(camera);
       const sx=(projected.x*.5+.5)*rect.width+rect.left-stageRect.left;
@@ -165,21 +212,32 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       if(idx!==tourIndex){tourIndex=idx;active=districts[idx].id;onSelect(active,{fromTour:true});}
       if(!touring){orbit.rDesired=85;}
     } else if(animate){traveler.position.copy(curve.getPointAt((time*.000012)%1));}
-    const easing=animate?.07:1;
-    orbit.theta=THREE.MathUtils.lerp(orbit.theta,orbit.thetaDesired,easing);
-    orbit.phi=THREE.MathUtils.lerp(orbit.phi,orbit.phiDesired,easing);
-    orbit.radius=THREE.MathUtils.lerp(orbit.radius,orbit.rDesired,easing);
-    orbit.focus.lerp(orbit.target,easing);
-    desiredPosition.set(orbit.focus.x+Math.sin(orbit.theta)*Math.sin(orbit.phi)*orbit.radius,orbit.focus.y+Math.cos(orbit.phi)*orbit.radius,orbit.focus.z+Math.cos(orbit.theta)*Math.sin(orbit.phi)*orbit.radius);
-    camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
+    if(introState.active){
+      // A single continuous camera trajectory from clear sky, through the cloud
+      // layers, down to the same exact isometric orbit used for world exploration.
+      const p=introState.progress,r=fitRadius();
+      const endEye=new THREE.Vector3(Math.sin(.35)*Math.sin(1.01)*r,3+Math.cos(1.01)*r,Math.cos(.35)*Math.sin(1.01)*r);
+      bezierInto(introCameraPoint,p,startEye,new THREE.Vector3(-5,119,126),new THREE.Vector3(14,71,117),endEye);
+      bezierInto(introLookPoint,p,startTarget,new THREE.Vector3(0,116,-36),new THREE.Vector3(0,12,4),new THREE.Vector3(0,3,0));
+      camera.position.copy(introCameraPoint);camera.lookAt(introLookPoint);
+    }else{
+      const easing=animate?.07:1;
+      orbit.theta=THREE.MathUtils.lerp(orbit.theta,orbit.thetaDesired,easing);
+      orbit.phi=THREE.MathUtils.lerp(orbit.phi,orbit.phiDesired,easing);
+      orbit.radius=THREE.MathUtils.lerp(orbit.radius,orbit.rDesired,easing);
+      orbit.focus.lerp(orbit.target,easing);
+      desiredPosition.set(orbit.focus.x+Math.sin(orbit.theta)*Math.sin(orbit.phi)*orbit.radius,orbit.focus.y+Math.cos(orbit.phi)*orbit.radius,orbit.focus.z+Math.cos(orbit.theta)*Math.sin(orbit.phi)*orbit.radius);
+      camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
+    }
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
+      skyClouds.forEach(c=>{c.group.position.x=c.baseX+Math.sin(time*.00013+c.phase)*3.5;});
       falls.material.opacity=.76+Math.sin(time*.003)*.09;
       world.children.forEach(c=>{if(c.userData.waterfall)c.position.y+=Math.sin(time*.003+c.position.x)*.001;});
     }
-    renderer.render(scene,camera);updateLabels();
+    renderer.render(scene,camera);if(!introState.active)updateLabels();
   }
   function visibility(){run=!document.hidden;last=performance.now();}
   document.addEventListener('visibilitychange',visibility);
   raf=requestAnimationFrame(tick);
-  return {focus,reset,zoom,startTour,stopTour,setMotion,dispose(){disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
+  return {focus,reset,zoom,startTour,stopTour,setMotion,setIntroProgress,endIntro,dispose(){disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
 }
