@@ -390,7 +390,7 @@ async function start(){
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
  renderDivisionMenu();fillSummary();
  const labelsRoot=$('landmark-labels');try{
-  const mod=await import('./world.js?v=1.4.0');
+  const mod=await import('./world.js?v=1.5.0');
   world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,onHover:()=>sound.hover(),motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
