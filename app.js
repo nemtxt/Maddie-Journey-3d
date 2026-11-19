@@ -1,4 +1,6 @@
 import {DIVISIONS,divisionForWorkspace} from './divisions.js?v=1.3.0';
+import {createSoundscape} from './soundscape.js?v=1.4.0';
+const sound=createSoundscape();
 const DISTRICTS=DIVISIONS;
 const ORIGINAL='https://nemtxt.github.io/Maddie-Journey-Prototype/';
 const MILESTONES=[
@@ -23,7 +25,7 @@ function finishIntro({focus=true}={}){
  introDone=true;introRunning=false;
  if(introTween){introTween.kill();introTween=null;}
  if(introFrame){cancelAnimationFrame(introFrame);introFrame=0;}
- const reveal=['.topbar','.hero-copy','.focus-panel','.bottom-bar','.landmark-labels','.scene-tools','.fallback-button'];
+ const reveal=['.world-hud','.hero-copy','.division-dock','.landmark-labels','.scene-tools','.fallback-button'];
  const gsap=window.gsap,allowMotion=motionEnabled&&!reduceMotion();
  if(gsap&&allowMotion)gsap.set(reveal,{opacity:0});
  document.body.classList.remove('intro-active');
@@ -31,11 +33,11 @@ function finishIntro({focus=true}={}){
  world?.endIntro();
  if(sceneReady&&!world&&!force2D)fallback2D();
  if(gsap&&allowMotion)gsap.to(reveal,{opacity:1,duration:.85,stagger:.09,ease:'power2.out',clearProps:'opacity'});
- if(focus&&currentView==='world')$('tour-start').focus({preventScroll:true});
+ if(focus&&currentView==='world')$('hud-divisions').focus({preventScroll:true});
 }
 function startIntro(){
  if(introDone||introRunning)return;
- introRunning=true;$('intro-start').disabled=true;
+ introRunning=true;$('intro-start').disabled=true;sound.reveal();
  $('intro-status').textContent='Descending through the clouds…';
  if(!world||!motionEnabled||reduceMotion()){finishIntro();return;}
  const progress={value:0},gsap=window.gsap;
@@ -95,9 +97,9 @@ function routeTo(hash){
  else{location.hash='#overview';}
 }
 function showView(view){
- currentView=view;const inWorld=view==='world';document.body.classList.toggle('view-world',inWorld);$('world-stage').hidden=!inWorld;$('world-stage').style.display=inWorld?'':'none';
+ currentView=view;const inWorld=view==='world';document.body.classList.toggle('view-world',inWorld);sound.setWorld(inWorld);if(!inWorld)closeDivisionMenu();$('world-stage').hidden=!inWorld;$('world-stage').style.display=inWorld?'':'none';
  $('content-area').hidden=inWorld;$('content-area').style.display=inWorld?'none':'block';
- document.querySelectorAll('.nav-link').forEach(b=>{let active=b.dataset.view===(view==='report'||view==='workspace'?'dashboard':view);b.classList.toggle('is-active',active);b.setAttribute('aria-current',active?'page':'false');});
+ // Fullscreen world removes the traditional navigation tabs; dashboards retain their own back controls.
  if(!inWorld)world?.stopTour();
 }
 function clearDistrict(){
@@ -312,8 +314,8 @@ async function start(){
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
  renderDistrictStrip();fillSummary();
  const labelsRoot=$('landmark-labels');try{
-  const mod=await import('./world.js?v=1.3.0');
-  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
+  const mod=await import('./world.js?v=1.4.0');
+  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,onHover:()=>sound.hover(),motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
  sceneReady=true;
