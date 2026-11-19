@@ -107,7 +107,7 @@ export function buildStoryEnvironment(THREE,world,{districts=[],route=null,lowQu
     color:'#75d8e1',transparent:true,opacity:.87,roughness:.14,
     metalness:.04,clearcoat:.85,side:THREE.DoubleSide
   });
-  path([[23,2.15,14],[28,2.2,17.2],[32.5,2.2,20],[36,2.05,21.5]],1.45,riverMat);
+  path([[23,2.15,14],[30,2.2,17.2],[36,2.2,20.5],[39.8,2.05,23.4]],1.45,riverMat);
   const waterfallVertex=`
     uniform float uTime;
     varying vec2 vUv;
@@ -141,14 +141,14 @@ export function buildStoryEnvironment(THREE,world,{districts=[],route=null,lowQu
   const curtains=[];
   for(let i=0;i<(lowQuality?2:4);i++){
     const fall=mesh(new THREE.PlaneGeometry(5.35-i*.65,31,13,43),waterfallMat,scenery,false);
-    fall.position.set(35.8+(i-1.5)*.2,-13.3,21.7+(i-1.5)*.25);
+    fall.position.set(39.6+(i-1.5)*.2,-13.3,23.6+(i-1.5)*.25);
     fall.rotation.y=-.55+i*.08;
     curtains.push(fall);
   }
   const sprayMat=new THREE.MeshBasicMaterial({color:'#dcf9f4',transparent:true,opacity:.25,depthWrite:false});
   const spray=[];
   for(let i=0;i<(lowQuality?7:16);i++){
-    const piece=ico(.43+(i%5)*.09,35.9+Math.sin(i*2.1)*2.5,-22-i%4*1.3,22.2+(i%3)*.7,sprayMat,scenery,1);
+    const piece=ico(.43+(i%5)*.09,39.7+Math.sin(i*2.1)*2.5,-22-i%4*1.3,24.0+(i%3)*.7,sprayMat,scenery,1);
     piece.scale.set(1.2,.65,1);piece.castShadow=false;
     spray.push({obj:piece,phase:i*.73});
   }
@@ -168,8 +168,7 @@ export function buildStoryEnvironment(THREE,world,{districts=[],route=null,lowQu
     spinner.add(bladeGroup);
     const material=blade%2===0?white:cream;
     const wing=mesh(new THREE.ConeGeometry(.51,4.2,3),material,bladeGroup);
-    wing.rotation.z=-Math.PI/2;wing.position.set(0,2.06,0);
-    wing.rotation.z=0;wing.position.set(0,2.25,.06);
+    wing.position.set(0,2.25,.06);
   }
   const solarGroup=new THREE.Group();solarGroup.name='IT sustainable data campus';solarGroup.position.set(37.3,2.2,-15);scenery.add(solarGroup);
   const silicon=new THREE.MeshStandardMaterial({color:'#23596a',metalness:.38,roughness:.2});
@@ -181,7 +180,7 @@ export function buildStoryEnvironment(THREE,world,{districts=[],route=null,lowQu
     box(2.6,.045,2.05,0,.085,0,silicon,frame);
     for(let l=0;l<4;l++)box(.035,.025,2.0,-1.05+l*.7,.117,0,grid,frame);
     for(let l=0;l<3;l++)box(2.55,.025,.035,0,.12,-.69+l*.69,grid,frame);
-    cylinder(.06,.09,1.3,0,-.72,0,cream,solarGroup,6);
+    cylinder(.06,.09,1.3,(i-0.5)*3.1,.15,(j-.5)*3.15,cream,solarGroup,6);
   }
 
   // 4. Curious little devices: a future-looking telescope at the Media overlook,
@@ -254,7 +253,7 @@ export function buildStoryEnvironment(THREE,world,{districts=[],route=null,lowQu
     spinner.rotation.z=t*.51;
     for(const {obj,phase} of spray){
       obj.position.y=-22+((t*.9+phase)%1)*-7.5;
-      obj.position.x=35.9+Math.sin(t+phase)*2.3;
+      obj.position.x=39.7+Math.sin(t+phase)*2.3;
       obj.material.opacity=.18+.10*Math.sin(t+phase);
     }
     for(const item of floaters){
