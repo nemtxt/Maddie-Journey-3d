@@ -19,6 +19,7 @@ try{
   await page.waitForFunction(()=>!document.body.classList.contains('intro-active'),null,{timeout:17000});
   assert.equal(await page.locator('#sky-intro').isHidden(),true,'Intro closes after Start');
   assert.equal(await page.locator('#world-stage').isVisible(),true,'World is visible after Start');
+  await page.waitForTimeout(1400); // Let the GSAP landmark/nav reveal finish before visual inspection.
   await page.screenshot({path:'browser-results/02-after-start.png'});
   await page.waitForFunction(()=>document.querySelectorAll('.world-label').length===8,null,{timeout:8000});
   assert.equal(await page.locator('.route-stop').count(),8,'All eight division destinations exist in the route strip');
