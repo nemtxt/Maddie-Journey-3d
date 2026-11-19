@@ -33,6 +33,12 @@ body.intro-active #world-stage .world-instructions,
 body.intro-active #world-stage .fallback-button{visibility:hidden;pointer-events:none}
 .sky-intro{position:absolute;inset:0;z-index:60;display:grid;place-items:center;overflow:hidden;isolation:isolate;pointer-events:auto;color:#234757}
 .sky-intro[hidden]{display:none!important}
+/* Fully opaque sky cover prevents the hidden island from bleeding through the
+   opening scene before Three.js has reached its intro camera position. */
+.intro-sky-veil{position:absolute;inset:0;z-index:-2;pointer-events:none;opacity:1;background:
+  radial-gradient(ellipse at 53% 29%,rgba(255,255,250,.98) 0%,rgba(246,255,255,.78) 22%,transparent 57%),
+  linear-gradient(180deg,#bde3eb 0%,#d7f0f3 43%,#e9f4ed 78%,#f7faf4 100%);}
+
 .intro-sunlight{pointer-events:none;position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 54% 23%,rgba(255,249,224,.62) 0%,rgba(255,252,240,.24) 28%,transparent 64%),linear-gradient(180deg,rgba(171,221,234,.26),rgba(234,246,244,.10) 64%,rgba(236,247,226,.22));}
 .intro-atmosphere{position:absolute;inset:0;z-index:0;pointer-events:none;filter:saturate(.95)}
 .atmosphere-cloud{position:absolute;width:min(55vw,720px);height:min(17vw,230px);border-radius:50%;background:rgba(255,255,255,.44);filter:blur(23px);box-shadow:inset 0 18px 28px rgba(255,255,255,.43),0 8px 60px rgba(247,255,255,.42);opacity:.84;will-change:transform}
