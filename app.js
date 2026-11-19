@@ -24,7 +24,7 @@ let employees=[];
 let divisionSummaries=[];
 let manifest={workspaces:[]},world=null,force2D=false,motionEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let peopleSearch='',peopleDivision='all',lastSearchQuery='',currentView='world',selectedDistrict=null;
-let introDone=false,introRunning=false,introTween=null,introFrame=0;
+let introDone=false,introRunning=false,introTween=null,introFrame=0,sceneReady=false;
 const reduceMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const showIntroOnEntry=()=>!location.hash||['#overview','#world'].includes(location.hash);
 function finishIntro({focus=true}={}){
@@ -38,7 +38,7 @@ function finishIntro({focus=true}={}){
  document.body.classList.remove('intro-active');
  $('sky-intro').hidden=true;
  world?.endIntro();
- if(!world&&!force2D)fallback2D();
+ if(sceneReady&&!world&&!force2D)fallback2D();
  if(gsap&&allowMotion)gsap.to(reveal,{opacity:1,duration:.85,stagger:.09,ease:'power2.out',clearProps:'opacity'});
  if(focus&&currentView==='world')$('tour-start').focus({preventScroll:true});
 }
@@ -303,6 +303,7 @@ async function start(){
   world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()&&!introDone});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
+ sceneReady=true;
  $('intro-start').disabled=false;
  $('intro-status').textContent=world?'An immersive world is ready to explore.':'A 2D journey is available on this device.';
  if(!showIntroOnEntry())finishIntro({focus:false});
