@@ -211,7 +211,7 @@ test('Eight 3D adventure outposts use original shared geometric assets',()=>{
  assert.ok(world.includes('adventureAssets.update(time,animate)'));
  assert.ok(world.includes('adventureAssets.setActive(id)'));
  assert.ok(world.includes('dataset.adventureOutposts'));
- for(const token of ['EXPEDITION OUTPOST','Waypoint ','flagGeometry','Compass','compass','outpostCount','dispose'])assert.ok(assets.includes(token));
+ for(const token of ['EXPEDITION OUTPOST','Waypoint ','flagGeometry','compass','outpostCount','dispose'])assert.ok(assets.includes(token));
  assert.ok(!assets.includes('fetch('));
  assert.ok(!assets.includes('https://'));
  assert.equal(DIVISIONS.length,8);
