@@ -255,3 +255,30 @@ body.view-world:not(.intro-active) .world-label{background:rgba(26,57,66,.91)}
   background:linear-gradient(95deg,rgba(219,243,241,.83),rgba(219,243,241,.16));
  }
 }
+
+/* Focus mode: emphasize a selected 3D division instead of overlapping it with the hero. */
+body.view-world:not(.intro-active) .hero-copy{
+ transition:opacity .35s ease,transform .35s ease,visibility .35s ease;
+}
+body.view-world.has-division-selection .hero-copy{
+ opacity:0;visibility:hidden;transform:translateX(-22px);pointer-events:none;
+}
+body.view-world.has-division-selection .focus-panel{
+ top:118px;max-height:calc(100svh - 231px);
+}
+body.view-world.has-division-selection .evaluator-person{padding:7px;}
+body.view-world.has-division-selection .panel-fine-label{margin:12px 0 7px;}
+body.view-world.has-division-selection .panel-section-list{max-height:145px;}
+@media(max-width:1000px){
+ body.view-world.has-division-selection .focus-panel{
+  top:145px;max-height:calc(100svh - 242px);
+ }
+}
+@media(max-width:680px){
+ body.view-world.has-division-selection .focus-panel{
+  top:auto;bottom:66px;max-height:min(360px,54svh);
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ body.view-world:not(.intro-active) .hero-copy{transition:none!important;}
+}
