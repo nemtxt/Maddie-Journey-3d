@@ -24,6 +24,50 @@ let employees=[];
 let divisionSummaries=[];
 let manifest={workspaces:[]},world=null,force2D=false,motionEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let peopleSearch='',peopleDivision='all',lastSearchQuery='',currentView='world',selectedDistrict=null;
+let introDone=false,introRunning=false,introTween=null,introFrame=0;
+const reduceMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const showIntroOnEntry=()=>!location.hash||['#overview','#world'].includes(location.hash);
+function finishIntro({focus=true}={}){
+ if(introDone)return;
+ introDone=true;introRunning=false;
+ if(introTween){introTween.kill();introTween=null;}
+ if(introFrame){cancelAnimationFrame(introFrame);introFrame=0;}
+ const reveal=['.topbar','.hero-copy','.focus-panel','.bottom-bar','.landmark-labels','.scene-tools','.fallback-button'];
+ const gsap=window.gsap,allowMotion=motionEnabled&&!reduceMotion();
+ if(gsap&&allowMotion)gsap.set(reveal,{opacity:0});
+ document.body.classList.remove('intro-active');
+ $('sky-intro').hidden=true;
+ world?.endIntro();
+ if(!world&&!force2D)fallback2D();
+ if(gsap&&allowMotion)gsap.to(reveal,{opacity:1,duration:.85,stagger:.09,ease:'power2.out',clearProps:'opacity'});
+ if(focus&&currentView==='world')$('tour-start').focus({preventScroll:true});
+}
+function startIntro(){
+ if(introDone||introRunning)return;
+ introRunning=true;$('intro-start').disabled=true;
+ $('intro-status').textContent='Descending through the clouds…';
+ if(!world||!motionEnabled||reduceMotion()){finishIntro();return;}
+ const progress={value:0},gsap=window.gsap;
+ if(gsap){
+  introTween=gsap.timeline({onComplete:()=>finishIntro()});
+  introTween.to('#intro-content',{opacity:0,y:-28,duration:.8,ease:'power2.inOut'},0)
+   .to('#intro-bottom',{opacity:0,duration:.6},0)
+   .to('#intro-atmosphere',{opacity:.08,scale:1.28,duration:4.4,ease:'power1.inOut'},.7)
+   .to('#intro-sunlight',{opacity:0,duration:3.1,ease:'power2.in'},1.25)
+   .to(progress,{value:1,duration:5.3,ease:'power2.inOut',onUpdate:()=>world?.setIntroProgress(progress.value)},.25)
+   .to('#sky-intro',{opacity:0,duration:1.1,ease:'power2.inOut'},4.45);
+ }else{
+  // Native camera animation fallback if the GSAP CDN is unavailable.
+  $('intro-content').style.transition='opacity .65s, transform .65s';
+  $('intro-content').style.opacity='0';$('intro-content').style.transform='translateY(-28px)';
+  const started=performance.now(),duration=5400;
+  function step(now){if(introDone)return;const t=Math.min(1,(now-started)/duration);
+    const eased=t*t*(3-2*t);world?.setIntroProgress(eased);
+    $('intro-atmosphere').style.opacity=String(1-eased);
+    if(t<1)introFrame=requestAnimationFrame(step);else finishIntro();}
+  introFrame=requestAnimationFrame(step);
+ }
+}
 const srcLink=(wid,sid)=>ORIGINAL+'#'+wid+':'+sid;
 const wspace=id=>manifest.workspaces.find(w=>w.id===id);
 const fullRoute=(wid,sid)=>'#'+wid+':'+sid;
@@ -217,6 +261,8 @@ function globalSearchResults(q){
 function openSearch(){const d=$('search-dialog');d.showModal();$('global-search').focus();$('search-results').innerHTML=globalSearchResults($('global-search').value);}
 function wireEvents(){
  document.querySelectorAll('.nav-link').forEach(b=>b.addEventListener('click',()=>{location.hash=b.dataset.view==='world'?'#overview':'#'+b.dataset.view;}));
+ $('intro-start').addEventListener('click',startIntro);
+ $('intro-skip').addEventListener('click',()=>finishIntro());
  $('tour-start').addEventListener('click',()=>{if(force2D)toggleMode();if(world)world.startTour();else location.hash='#journey';});
  $('open-map').addEventListener('click',()=>$('district-strip').scrollIntoView({behavior:motionEnabled?'smooth':'instant'}));
  $('all-reports').addEventListener('click',()=>location.hash='#dashboard');
@@ -254,9 +300,12 @@ async function start(){
  renderDistrictStrip();fillSummary();
  const labelsRoot=$('landmark-labels');try{
   const mod=await import('./world.js');
-  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled});
+  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
+ $('intro-start').disabled=false;
+ $('intro-status').textContent=world?'An immersive world is ready to explore.':'A 2D journey is available on this device.';
+ if(!showIntroOnEntry())finishIntro({focus:false});
  routeTo(location.hash);
  if(!employees.length)console.warn('Display-only fictional roster unavailable. Check data/fictional-snapshot.json.');
 }
