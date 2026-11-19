@@ -160,3 +160,28 @@ test('soundtrack is entirely original, opt-in, and locally synthesized',()=>{
  assert.ok(!app.includes("'search-toggle'"));
  assert.ok(!app.includes("'all-reports'"));
 });
+
+
+test('Dream Factory-informed details are original procedural scenery and preserve route controls',()=>{
+ const world=read('world.js');
+ const scenic=read('dream-details.js');
+ const app=read('app.js');
+ for(const part of ['geologicalLayers','rockFragments','waterfallCurtains','balloons','StoryEnvironment']){
+   assert.ok((world+scenic).includes(part),'Expected scenic feature: '+part);
+ }
+ assert.ok(world.includes("buildStoryEnvironment(THREE,world,{districts,route:curve,lowQuality})"));
+ assert.ok(world.includes("storyDetails.update(time,animate)"));
+ assert.ok(world.includes("dataset.geologicalLayers"));
+ assert.ok(scenic.includes("new THREE.ShaderMaterial"));
+ assert.ok(scenic.includes("new THREE.InstancedMesh"));
+ assert.ok(scenic.includes("waterfallMat.uniforms.uTime"));
+ assert.ok(scenic.includes("spinner.rotation.z"));
+ assert.ok(scenic.includes("if(!enabled)return"));
+ assert.ok(scenic.includes("lowQuality?2:4"));
+ assert.ok(!scenic.includes("sketchfab.com/"));
+ assert.ok(!scenic.includes("hkdi.edu.hk/dreamfactory/assets"));
+ assert.ok(app.includes("world.js?v=1.5.0"));
+ assert.equal(snapshot.people.length,51);
+ assert.equal(manifest.workspaces.length,9);
+ assert.equal(manifest.workspaces.reduce((sum,w)=>sum+w.sections.length,0),86);
+});
