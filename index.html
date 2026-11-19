@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="intro-active">
   <a class="skip-link" href="#main">Skip to main content</a>
   <div class="shell" id="app">
     <header class="topbar">
@@ -42,6 +42,29 @@
           <div class="fallback-land"><span class="fallback-mountain a"></span><span class="fallback-mountain b"></span><span class="fallback-mountain c"></span><span class="fallback-path"></span></div>
         </div>
         <div class="landmark-labels" id="landmark-labels" aria-label="Interactive world landmarks"></div>
+
+        <!-- One continuous Three.js world: the welcome screen overlays the sky camera before descent. -->
+        <section class="sky-intro" id="sky-intro" aria-labelledby="intro-title">
+          <div class="intro-sunlight" aria-hidden="true"></div>
+          <div class="intro-atmosphere" id="intro-atmosphere" aria-hidden="true">
+            <div class="atmosphere-cloud cloud-one"></div>
+            <div class="atmosphere-cloud cloud-two"></div>
+            <div class="atmosphere-cloud cloud-three"></div>
+            <div class="atmosphere-cloud cloud-four"></div>
+          </div>
+          <div class="intro-content" id="intro-content">
+            <div class="intro-eyebrow"><span></span> THE WORLD OF PEOPLE <span></span></div>
+            <h1 id="intro-title">Welcome to<br><em>Maddie Journey.</em></h1>
+            <p>Every person has a path. Every story deserves to be discovered.</p>
+            <button type="button" class="intro-start" id="intro-start">
+              <span>Start</span>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            </button>
+            <div class="intro-status" id="intro-status" role="status" aria-live="polite">An immersive world is ready to explore.</div>
+          </div>
+          <button type="button" class="intro-skip" id="intro-skip">Skip intro <span aria-hidden="true">↗</span></button>
+          <div class="intro-bottom" aria-hidden="true"><span>PEOPLE · PURPOSE · PROGRESS</span><span>SCROLL THROUGH THE SKY AND DISCOVER MORE</span><span>EST. 2026</span></div>
+        </section>
 
         <section class="hero-copy" aria-labelledby="hero-title">
           <span class="eyebrow"><span class="eyebrow-line"></span> WELCOME TO MADDIE WORLD <span class="tiny-star">✳</span></span>
@@ -116,6 +139,7 @@
     <div id="employee-details"></div>
   </dialog>
 
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
