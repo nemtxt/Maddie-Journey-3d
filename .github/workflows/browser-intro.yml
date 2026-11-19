@@ -8,6 +8,7 @@ on:
       - 'world.js'
       - 'world-assets.js'
       - 'dream-details.js'
+      - 'adventure-assets.js'
       - 'divisions.js'
       - 'styles.css'
       - 'soundscape.js'
