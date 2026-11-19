@@ -15,6 +15,10 @@ try{
  const start=page.locator('#intro-start');
  await start.waitFor({state:'visible',timeout:10000});
  assert.equal(await start.isEnabled(),true,'Start must remain accessible while loading');
+ assert.ok((await start.innerText()).includes('Begin Adventure'),'Primary action should read Begin Adventure');
+ assert.equal(await page.locator('#expedition-compass').count(),1);
+ assert.equal(await page.locator('#intro-flight-trail').count(),1);
+ assert.equal(await page.locator('.expedition-float-note').count(),2);
  assert.equal(await page.locator('#intro-audio').getAttribute('aria-pressed'),'false','Audio must never autoplay');
  await page.screenshot({path:'browser-results/01-sky-intro.png'});
  await start.click();
