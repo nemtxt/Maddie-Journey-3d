@@ -24,7 +24,7 @@ const employees=Array.isArray(window.MCD?.EMP)?window.MCD.EMP:[];
 const metrics=window.MCD?.M||{};
 let manifest={workspaces:[]},world=null,force2D=false,motionEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let peopleSearch='',peopleDivision='all',lastSearchQuery='',currentView='world',selectedDistrict=null;
-const srcLink=(wid,sid)=>ORIGINAL+'#'+encodeURIComponent(wid+':'+sid);
+const srcLink=(wid,sid)=>ORIGINAL+'#'+wid+':'+sid;
 const wspace=id=>manifest.workspaces.find(w=>w.id===id);
 const fullRoute=(wid,sid)=>'#'+wid+':'+sid;
 const initials=name=>String(name||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
