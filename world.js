@@ -1,22 +1,30 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+import {buildDivisionDistrict,enhanceTerrain} from './world-assets.js?v=1.3.0';
 
 /** A lightweight bespoke Three.js diorama, no downloadable models or premium assets. */
 export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=true,intro=true}) {
   const stage=canvas.closest('.world-stage');
   const scene=new THREE.Scene();
   scene.background=new THREE.Color('#d6eef0');
-  scene.fog=new THREE.FogExp2('#d6eef0',0.005);
+  scene.fog=new THREE.FogExp2('#d6eef0',0.0032);
   const camera=new THREE.PerspectiveCamera(39,1,.1,420);
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.65));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.45;
+  renderer.toneMappingExposure=1.28;
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const hemi=new THREE.HemisphereLight(0xf8ffff,0x659381,2.7);scene.add(hemi);
-  const sun=new THREE.DirectionalLight(0xfff5df,2.8);sun.position.set(-35,70,42);scene.add(sun);
+  const sun=new THREE.DirectionalLight(0xfff5df,2.75);sun.position.set(-35,76,43);scene.add(sun);
+  sun.castShadow=true;
+  sun.shadow.mapSize.set(window.innerWidth<850?1024:2048,window.innerWidth<850?1024:2048);
+  sun.shadow.camera.left=-75;sun.shadow.camera.right=75;sun.shadow.camera.top=75;sun.shadow.camera.bottom=-75;
+  sun.shadow.camera.near=1;sun.shadow.camera.far=190;sun.shadow.bias=-.00012;
+  const rim=new THREE.DirectionalLight(0xc3e7e9,.73);rim.position.set(50,44,-58);scene.add(rim);
   const world=new THREE.Group();scene.add(world);
   const mat=(hex,rough=1)=>new THREE.MeshStandardMaterial({color:hex,roughness:rough,metalness:0,flatShading:true});
-  const grass=mat('#75b68c'),grassLight=mat('#9acb8b'),grassDark=mat('#487e62'),cliff=mat('#636b70'),stone=mat('#879198'),snow=mat('#f0f4f0'),soil=mat('#8c7762'),sand=mat('#e6cf94'),water=mat('#6ed0dd',.45),foam=mat('#d2f9fa'),wood=mat('#9b704d'),roofRed=mat('#d66d59'),roofBlue=mat('#5d9fb1'),gold=mat('#e9d27f'),goldGlow=new THREE.MeshBasicMaterial({color:'#fff3af'});
+  const grass=mat('#75b68c'),grassLight=mat('#9acb8b'),grassDark=mat('#487e62'),cliff=mat('#636b70'),stone=mat('#879198'),snow=mat('#f0f4f0'),soil=mat('#8c7762'),sand=mat('#e6cf94'),water=new THREE.MeshPhysicalMaterial({color:'#69c4d8',roughness:.19,metalness:.07,clearcoat:.85,clearcoatRoughness:.16,transparent:true,opacity:.89}),foam=mat('#d2f9fa'),wood=mat('#9b704d'),roofRed=mat('#d66d59'),roofBlue=mat('#5d9fb1'),gold=mat('#e9d27f'),goldGlow=new THREE.MeshBasicMaterial({color:'#fff3af'});
   const sphere=(radius,color,x,y,z,width=12,height=8)=>{const obj=new THREE.Mesh(new THREE.SphereGeometry(radius,width,height),color);obj.position.set(x,y,z);world.add(obj);return obj;};
   const cylinder=(rt,rb,h,seg,color,x,y,z)=>{const obj=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),color);obj.position.set(x,y,z);world.add(obj);return obj;};
   function seeded(seed=9){let s=seed;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296);}
@@ -25,7 +33,8 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   for(const [rt,rb,h,y,c] of [[52,47,5,-2,grassDark],[49,39,9,-8,soil],[39,21,8,-16,cliff],[25,10,7,-23,stone]]){
     const ring=cylinder(rt,rb,h,17,c,0,y,0);ring.scale.z=.7;ring.rotation.y=.09;
   }
-  const top=cylinder(51.9,51,1.3,18,grass,0,1,0);top.scale.z=.7;
+  const top=cylinder(51.9,51,1.3,24,grass,0,1,0);top.scale.z=.7;top.receiveShadow=true;
+  enhanceTerrain(THREE,world,districts);
   // Low-relief mounds and woodland clearing patches.
   for(let i=0;i<33;i++){
     const a=rand()*Math.PI*2,r=Math.sqrt(rand())*.87;
@@ -52,22 +61,32 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
     const rock=new THREE.Mesh(new THREE.ConeGeometry(r,h,7,3),shade);rock.position.set(x,1.5+h/2,z);rock.rotation.y=rand();world.add(rock);
     const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.32,h*.26,7),snow);cap.position.set(x,1.5+h*.87,z);cap.rotation.y=rock.rotation.y;world.add(cap);
   }
-  mountain(-13,-15,12,23,cliff);mountain(1,-20,15,31,stone);mountain(16,-16,10,20,cliff);
+  mountain(-9,-12,8.5,21,cliff);
+  mountain(1,-14,10.5,29,stone);
+  mountain(11,-13,7,17,cliff);
   // Lake and river; gently animated cascading waterfall.
   const lake=cylinder(7,7,.16,32,water,13,1.81,2);lake.scale.z=.58;
   const streamPoints=[[3,-12],[4,-5],[9,-1],[13,2],[17,9],[23,14]].map(([x,z])=>new THREE.Vector3(x,1.94,z));
   const streamCurve=new THREE.CatmullRomCurve3(streamPoints);
   const stream=new THREE.Mesh(new THREE.TubeGeometry(streamCurve,85,1.05,9,false),water);world.add(stream);
-  const falls=new THREE.Mesh(new THREE.BoxGeometry(3.8,11,.55),new THREE.MeshStandardMaterial({color:'#76d1e4',transparent:true,opacity:.85,roughness:.25}));
+  const falls=new THREE.Mesh(new THREE.BoxGeometry(3.8,11,.55),new THREE.MeshPhysicalMaterial({color:'#78dce8',transparent:true,opacity:.78,roughness:.14,clearcoat:1}));
   falls.position.set(3,9,-13);world.add(falls);
+  const waterRipples=[];
   for(let i=0;i<17;i++){const bubble=sphere(.15+rand()*.28,foam,2.5+rand()*2,2.1+rand()*9,-12.5+rand());bubble.userData.waterfall=true;}
+  for(let i=0;i<5;i++){
+    const ripple=new THREE.Mesh(new THREE.TorusGeometry(.65+i*.45,.038,4,40),
+      new THREE.MeshBasicMaterial({color:'#d9f9fc',transparent:true,opacity:.48,depthWrite:false}));
+    ripple.rotation.x=Math.PI/2;ripple.position.set(13,2.13,2);ripple.scale.setScalar(.65+i*.12);world.add(ripple);
+    waterRipples.push(ripple);
+  }
   // Routes: a broad warm pathway with luminous center line and a traveling highlight.
-  const routePoints=districts.map(d=>new THREE.Vector3(d.x,2.23,d.z));
-  routePoints.splice(4,0,new THREE.Vector3(22,2.23,13));
-  routePoints.splice(6,0,new THREE.Vector3(36,2.23,-10));
+  const routePoints=districts.map(d=>new THREE.Vector3(d.x,2.35,d.z));
+  routePoints.splice(3,0,new THREE.Vector3(1,2.35,27));
+  routePoints.splice(6,0,new THREE.Vector3(36,2.35,1));
   const curve=new THREE.CatmullRomCurve3(routePoints,false,'centripetal',.5);
-  const routeBase=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.65,8,false),sand);world.add(routeBase);
-  const routeLit=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.20,6,false),gold);world.add(routeLit);
+  const routeBase=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.91,10,false),soil);world.add(routeBase);
+  const routePaving=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.70,10,false),sand);world.add(routePaving);
+  const routeLit=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.08,5,false),gold);world.add(routeLit);
   const traveler=new THREE.Mesh(new THREE.SphereGeometry(.88,12,12),goldGlow);traveler.position.copy(routePoints[0]);world.add(traveler);
   traveler.add(new THREE.PointLight(0xffefb1,1.5,8));
   // Forest props, campsites, flags, pavilion, towers: custom low-poly scenes per district.
@@ -86,25 +105,17 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
   function tent(x,z,color){
     const shape=new THREE.Mesh(new THREE.ConeGeometry(2.1,3.2,4),color);shape.position.set(x,3.1,z);shape.rotation.y=Math.PI/4;world.add(shape);
   }
-  const accentColors=['#71b6a4','#f0c769','#8dc3cc','#f27d68','#a18bc8','#79c9a5','#f1b77e','#8aaebf','#b983a2'];
-  const anchors=[];
+  // Distinct original project assets for eight actual company divisions.
+  const accentColors=districts.map(d=>d.color);
+  const anchors=[],animatedDistrictAssets=[];
   districts.forEach((d,i)=>{
-    const color=mat(accentColors[i]),base=cylinder(4.45,4.65,.46,20,mat('#d8e7bc'),d.x,1.77,d.z);base.userData.district=d.id;hitTargets.push(base);
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(4.5,.15,5,36),mat(accentColors[i]));ring.rotation.x=Math.PI/2;ring.position.set(d.x,2.08,d.z);world.add(ring);
-    if(i===0){tent(d.x-1,d.z,color);tent(d.x+2,d.z+1,roofBlue);}
-    else if(i===1){building(d.x,d.z,color,3.2);}
-    else if(i===2){spire(d.x,d.z,color);}
-    else if(i===3){spire(d.x,d.z,color);tent(d.x+4,d.z-1,roofBlue);}
-    else if(i===4){building(d.x-1,d.z,roofBlue);building(d.x+3,d.z+2,color,3.4);}
-    else if(i===5){building(d.x,d.z,color);tent(d.x+3,d.z,roofRed);}
-    else if(i===6){building(d.x,d.z,color,4);}
-    else if(i===7){spire(d.x,d.z,color);}
-    else {spire(d.x,d.z,color);building(d.x+3,d.z+1,roofBlue,3);}
-    const flag=cylinder(.07,.07,5,5,wood,d.x+4,4.5,d.z-2);
-    const banner=new THREE.Mesh(new THREE.BoxGeometry(2,.95,.08),color);banner.position.set(d.x+5,6.2,d.z-2);world.add(banner);
-    const hit=new THREE.Mesh(new THREE.CylinderGeometry(6,6,20,10),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
-    hit.position.set(d.x,7,d.z);hit.userData.district=d.id;world.add(hit);hitTargets.push(hit);
-    anchors.push(new THREE.Vector3(d.x,12.5,d.z));
+    const district=buildDivisionDistrict(THREE,world,d);
+    animatedDistrictAssets.push(...district.moving);
+    const hit=new THREE.Mesh(new THREE.CylinderGeometry(7,7,22,12),
+      new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+    hit.position.set(d.x,9,d.z);hit.userData.district=d.id;
+    world.add(hit);hitTargets.push(hit);
+    anchors.push(new THREE.Vector3(d.x,14.5,d.z));
   });
   // Animated cumulus clouds.
   const clouds=[];
@@ -230,6 +241,11 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,motionEnabled=
       camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
     }
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
+      waterRipples.forEach((r,i)=>{r.scale.setScalar(.6+((time*.00017+i*.22)%1)*1.3);r.material.opacity=.38*(1-(time*.00017+i*.22)%1);});
+      animatedDistrictAssets.forEach((a,i)=>{
+        if(a.kind==='beacon')a.obj.material.emissiveIntensity=.22+.15*Math.sin(time*.0018+i);
+        if(a.kind==='sign')a.obj.rotation.y=Math.sin(time*.00048+i)*.024;
+      });
       skyClouds.forEach(c=>{c.group.position.x=c.baseX+Math.sin(time*.00013+c.phase)*3.5;});
       falls.material.opacity=.76+Math.sin(time*.003)*.09;
       world.children.forEach(c=>{if(c.userData.waterfall)c.position.y+=Math.sin(time*.003+c.position.x)*.001;});
