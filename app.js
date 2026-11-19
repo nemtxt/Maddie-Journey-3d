@@ -1,23 +1,14 @@
+import {DIVISIONS,divisionForWorkspace} from './divisions.js?v=1.3.0';
+const DISTRICTS=DIVISIONS;
 const ORIGINAL='https://nemtxt.github.io/Maddie-Journey-Prototype/';
-const DISTRICTS=[
- {id:'people',name:'People Directory',short:'People Base Camp',x:-34,z:-6,color:'#79c9a5',desc:'Meet the people at the heart of every journey. Explore the workforce masterlist, documents, movements and individual records.'},
- {id:'pay',name:'Pay & Benefits',short:'Benefits Oasis',x:-28,z:16,color:'#e9c96f',desc:'A calm place to explore salary administration, benefits, contributions, wellness and compensation movement.'},
- {id:'pulse',name:'Workforce Pulse',short:'Activity Valley',x:-8,z:24,color:'#78bac0',desc:'Follow the rhythm of work through attendance, absences, schedules and workforce monitoring.'},
- {id:'journey',name:'Maddie Journey',short:'Career Heights',x:15,z:17,color:'#ef8668',desc:'Explore career direction, onboarding, performance, belonging and every stage of the employee experience.'},
- {id:'learning',name:'Maddie Learning Hub',short:'Learning Forest',x:33,z:4,color:'#9f8ec5',desc:'Explore the paths of learning through training calendars, development programs, competencies and evaluations.'},
- {id:'culture',name:'Culture & Community',short:'Community Village',x:28,z:-17,color:'#75bfa7',desc:'Discover company events, culture, engagement, recognition and milestones.'},
- {id:'talent',name:'Talent Acquisition',short:'Talent Gateway',x:9,z:-26,color:'#eeb580',desc:'Where new journeys begin: workforce planning, hiring pipelines, interviews and new-hire onboarding.'},
- {id:'governance',name:'People Governance',short:'Governance Ridge',x:-18,z:-22,color:'#7facc3',desc:'Explore compliance, documentation, concerns, notices and governance reviews in a structured way.'},
- {id:'scoreboard',name:'Executive Scoreboard',short:'Executive Summit',x:0,z:-2,color:'#b884a4',desc:'Climb to a panoramic executive view of organizational people metrics, progress and risk reporting.'}
-];
 const MILESTONES=[
- {name:'Recruitment',place:'Talent Gateway',id:'talent',route:'talent:pipeline',note:'Recruitment pipeline and workforce planning'},
- {name:'Onboarding',place:'People Base Camp',id:'people',route:'journey:onboarding',note:'Hiring, orientation and probation'},
- {name:'Integration',place:'Community Village',id:'culture',route:'journey:belonging',note:'Culture, belonging and connection'},
- {name:'Performance',place:'Activity Valley',id:'pulse',route:'journey:report-cards',note:'Performance, attendance and evaluation'},
- {name:'Development',place:'Learning Forest',id:'learning',route:'learning:competency',note:'Training and competency growth'},
- {name:'Career Heights',place:'Journey Mountain',id:'journey',route:'journey:level-gates',note:'Career direction and progression'},
- {name:'Transition',place:'Executive Summit',id:'scoreboard',route:'journey:employee-movement',note:'Movements and employment transitions'}
+ {name:'Recruitment',place:'Growth Harbour',id:'business',route:'talent:pipeline',note:'Recruitment pipeline and workforce planning'},
+ {name:'Onboarding',place:'People & Culture Hub',id:'hr',route:'journey:onboarding',note:'Hiring, orientation and probation'},
+ {name:'Integration',place:'Convention Grounds',id:'gencon',route:'journey:belonging',note:'Culture, belonging and connection'},
+ {name:'Performance',place:'Revenue Outlook',id:'revenue',route:'journey:report-cards',note:'Performance, attendance and evaluation'},
+ {name:'Development',place:'Creative Atelier',id:'design',route:'learning:competency',note:'Training and competency growth'},
+ {name:'Career Heights',place:'Growth Harbour',id:'business',route:'journey:level-gates',note:'Career direction and progression'},
+ {name:'Transition',place:'Operations Campus',id:'corporate',route:'journey:employee-movement',note:'Movements and employment transitions'}
 ];
 const $=id=>document.getElementById(id),safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let employees=[];
@@ -86,13 +77,14 @@ const icons={
  governance:'<svg viewBox="0 0 24 24"><path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6l8-4zm-4 10 3 3 5-5"/></svg>',
  scoreboard:'<svg viewBox="0 0 24 24"><path d="M4 21V12m5 9V7m5 14V3m5 18v-8"/></svg>'
 };
+const divisionIcons={hr:icons.people,revenue:icons.pay,design:icons.learning,corporate:icons.pulse,media:icons.culture,it:icons.scoreboard,gencon:icons.talent,business:icons.journey};
 const sourceStatus=section=>section?.sample_mode==='generated example'?'Generated fictional example':'Original fictional fixture';
 function reportTotal(){return manifest.workspaces.reduce((a,w)=>a+w.sections.length,0);}
 function routeTo(hash){
  const route=decodeURIComponent((hash||location.hash||'#overview').replace(/^#/,''));const [base,section]=route.split(':');
  if(!base||base==='overview'||base==='world'){
   showView('world');
-  if(section&&wspace(section)){selectDistrict(section,{fromRoute:true});}
+  if(section){const d=DISTRICTS.find(d=>d.id===section)||((wspace(section))?divisionForWorkspace(section):null);if(d)selectDistrict(d.id,{fromRoute:true});}
   else if(!section)clearDistrict();
  }else if(base==='dashboard'){showView('dashboard');renderDashboard();}
  else if(base==='people'&&!section){showView('people');renderPeople();}
@@ -103,22 +95,32 @@ function routeTo(hash){
  else{location.hash='#overview';}
 }
 function showView(view){
- currentView=view;const inWorld=view==='world';$('world-stage').hidden=!inWorld;$('world-stage').style.display=inWorld?'':'none';
+ currentView=view;const inWorld=view==='world';document.body.classList.toggle('view-world',inWorld);$('world-stage').hidden=!inWorld;$('world-stage').style.display=inWorld?'':'none';
  $('content-area').hidden=inWorld;$('content-area').style.display=inWorld?'none':'block';
  document.querySelectorAll('.nav-link').forEach(b=>{let active=b.dataset.view===(view==='report'||view==='workspace'?'dashboard':view);b.classList.toggle('is-active',active);b.setAttribute('aria-current',active?'page':'false');});
  if(!inWorld)world?.stopTour();
 }
-function clearDistrict(){selectedDistrict=null;world?.reset();$('panel-kicker').textContent='WORLD GUIDE / 01—09';$('panel-content').innerHTML='<div class="panel-feature-icon">✳</div><h2>Choose your destination.</h2><p>Select a landmark to discover its people, metrics and stories, or take the guided journey.</p><div class="guide-divider"></div><p class="small-note">Click a world marker or choose a destination below.</p>';paintStrip();}
+function clearDistrict(){
+ selectedDistrict=null;world?.reset();
+ $('panel-kicker').textContent='DIVISION GUIDE / 01—08';
+ $('panel-content').innerHTML='<div class="panel-feature-icon">✳</div><h2>Discover eight division districts.</h2><p>Select a landmark to see its evaluator team, environmental identity and linked monitoring workspaces.</p><div class="guide-divider"></div><p class="small-note">The original nine monitoring workspaces and all fictional reports remain intact.</p>';
+ paintStrip();
+}
 function selectDistrict(id,{fromTour=false,fromRoute=false}={}){
  const d=DISTRICTS.find(x=>x.id===id);if(!d)return;
- selectedDistrict=d.id;$('panel-kicker').textContent='DESTINATION / '+String(DISTRICTS.indexOf(d)+1).padStart(2,'0')+'—09';
- const w=wspace(d.id),sections=w?.sections||[];
- $('panel-content').innerHTML='<div class="panel-tag" style="background:'+safe(d.color)+'22;color:'+safe(d.color)+'">DISCOVER THE AREA</div>'+
- '<h2>'+safe(d.short)+'</h2><p>'+safe(d.desc)+'</p><div class="panel-stat-row"><span><b>'+sections.length+'</b>Available reports</span><span><b>'+(d.id==='people'?employees.length:'01')+'</b>'+(d.id==='people'?'Fictional profiles':'World destination')+'</span></div>'+
- '<div class="panel-section-list">'+sections.slice(0,5).map(s=>'<button type="button" data-report="'+safe(d.id+':'+s.id)+'">'+safe(s.name)+'<b>↗</b></button>').join('')+'</div>'+
- '<button type="button" class="panel-cta" data-workspace="'+safe(d.id)+'">Explore all '+sections.length+' reports <span>↗</span></button>';
+ selectedDistrict=d.id;$('panel-kicker').textContent='COMPANY DIVISION / '+d.marker+'—08';
+ const names=d.evaluators.map(p=>'<div class="evaluator-person"><span class="evaluator-avatar" aria-hidden="true">'+safe(initials(p.name))+'</span><span><strong>'+safe(p.name)+'</strong><small>'+safe(p.role)+'</small></span></div>').join('');
+ const related=d.workspaces.map(wspace).filter(Boolean);
+ $('panel-content').innerHTML='<div class="panel-tag" style="background:'+safe(d.color)+'26;color:#345d64">DIVISION DESTINATION</div>'+
+ '<h2>'+safe(d.name)+'</h2><p>'+safe(d.desc)+'</p>'+
+ '<div class="panel-fine-label">ASSIGNED EVALUATOR'+(d.evaluators.length>1?'S':'')+' / USERS</div><div class="evaluator-list">'+names+'</div>'+
+ '<div class="panel-fine-label">RELATED MONITORING WORKSPACES</div>'+
+ '<div class="panel-section-list">'+related.map(w=>'<button type="button" data-workspace="'+safe(w.id)+'"><span>'+safe(w.name)+'</span><b>'+w.sections.length+' reports ↗</b></button>').join('')+'</div>'+
+ '<button type="button" class="panel-cta" data-workspace="'+safe(related[0]?.id||'people')+'">Explore linked dashboards <span>↗</span></button>'+
+ '<p class="panel-qualification">Division contact details are reference assignments, separate from the 51 fictional employee records.</p>';
  if(!fromTour)world?.focus(id);
- paintStrip();if(!fromTour&&!fromRoute&&location.hash!=='#world:'+id)history.replaceState(null,'','#world:'+id);
+ paintStrip();
+ if(!fromTour&&!fromRoute&&location.hash!=='#world:'+id)history.replaceState(null,'','#world:'+id);
 }
 function paintStrip(){
  document.querySelectorAll('.route-stop').forEach(b=>{b.classList.toggle('is-selected',b.dataset.district===selectedDistrict);b.setAttribute('aria-pressed',String(b.dataset.district===selectedDistrict));});
@@ -126,7 +128,7 @@ function paintStrip(){
 function worldSelected(id,flags){selectDistrict(id,{fromTour:Boolean(flags?.fromTour)});}
 function fallback2D(){
  force2D=true;const stage=$('world-stage');stage.classList.add('is-2d');$('world-fallback').hidden=false;$('world-mode').textContent='3D view';$('world-mode').setAttribute('aria-pressed','true');
- const positions=[[31,63],[38,72],[49,73],[59,63],[70,61],[71,76],[59,82],[42,83],[50,54]];
+ const positions=[[31,59],[25,71],[43,77],[56,78],[74,62],[74,75],[59,86],[38,84]];
  const labels=$('landmark-labels');if(!labels.children.length){
  DISTRICTS.forEach((d,i)=>{const b=document.createElement('button');b.className='world-label';b.innerHTML='<span class="label-dot"></span><span>'+safe(d.short)+'</span>';b.style.setProperty('--accent',d.color);b.addEventListener('click',()=>selectDistrict(d.id));labels.append(b);});
  }
@@ -140,13 +142,13 @@ function toggleMode(){
 }
 function fillSummary(root){
  $('stat-people').textContent=String(employees.length||manifest.people_count||'—');
- $('stat-districts').textContent=String(manifest.workspaces.length).padStart(2,'0');
+ $('stat-districts').textContent=String(DISTRICTS.length).padStart(2,'0');
  $('stat-reports').textContent=String(reportTotal()).padStart(2,'0');
 }
 function renderDistrictStrip(){
  $('district-strip').innerHTML=DISTRICTS.map((d,i)=>'<button type="button" class="route-stop" data-district="'+d.id+'" aria-pressed="false">'+
- '<span class="stop-icon" style="color:'+d.color+'">'+(icons[d.id]||'')+'</span>'+
- '<span class="stop-name">'+safe(d.short)+'<small>'+String(i+1).padStart(2,'0')+' / '+safe(d.name)+'</small></span></button>').join('');
+ '<span class="stop-icon" style="color:'+d.color+'">'+(divisionIcons[d.id]||'')+'</span>'+
+ '<span class="stop-name">'+safe(d.name)+'<small>'+String(i+1).padStart(2,'0')+' / '+safe(d.short)+'</small></span></button>').join('');
 }
 function heading(title,desc){
  $('content-heading').textContent=title;$('content-subtitle').textContent=desc||'';$('content-area').scrollIntoView({behavior:motionEnabled?'smooth':'instant',block:'start'});
@@ -155,25 +157,35 @@ function dashboardMetrics(){
 
  return [
  ['Fictional people',employees.length,'Current active example roster'],
- ['Workspaces',manifest.workspaces.length,'Interactive world destinations'],
+ ['Company divisions',DISTRICTS.length,'Distinct 3D world districts'],
  ['Report routes',reportTotal(),'From the original inventory'],
  ['Probationary',employees.filter(e=>e.status==='Probationary').length,'Derived from fictional records']
  ];
 }
 function metricCards(rows){return '<div class="info-grid">'+rows.map(([name,num,info])=>'<div class="metric-card"><span class="metric-label">'+safe(name)+'</span><strong>'+safe(num)+'</strong><small>'+safe(info)+'</small></div>').join('')+'</div>';}
 function renderDashboard(){
- heading('World overview','A complete picture of the nine People & Culture workspaces, with an interactive landscape as the starting point.');
- const divisions=divisionSummaries;
- $('content-body').innerHTML=metricCards(dashboardMetrics())+'<div class="dashboard-split"><section class="surface-card"><h3>Explore a workspace</h3><p class="card-description">Every destination opens its own original report inventory, without changing the fictional data.</p><div class="workspace-grid">'+
- DISTRICTS.map(d=>{const w=wspace(d.id);return '<button type="button" class="workspace-tile" data-workspace="'+d.id+'"><span class="tile-bullet" style="--tile:'+d.color+'"></span><span>'+safe(d.name)+'<small>'+(w?.sections.length??0)+' reports →</small></span></button>';}).join('')+
- '</div></section><section class="surface-card"><h3>Workforce by division</h3><p class="card-description">Counts are sourced from the original fictional fixture.</p>'+
- '<div class="table-scroll"><table class="data-table"><thead><tr><th>Division</th><th>People</th></tr></thead><tbody>'+
- divisions.map(d=>'<tr><td>'+safe(d[0])+'</td><td><strong>'+safe(d[1])+'</strong></td></tr>').join('')+'</tbody></table></div></section></div>';
+ heading('World overview','Eight company divisions, nine monitoring workspaces and all 86 original fictional report routes.');
+ const sourceGroups=divisionSummaries;
+ $('content-body').innerHTML=metricCards(dashboardMetrics())+
+ '<section class="surface-card" style="margin-top:17px"><h3>Explore the company divisions</h3>'+
+ '<p class="card-description">Select a district to fly to its unique 3D campus. Evaluator assignments are provided contact references, not fictional employee roster entries.</p>'+
+ '<div class="division-grid">'+DISTRICTS.map(d=>'<button class="division-tile" type="button" data-world="'+safe(d.id)+'" style="--division-accent:'+safe(d.color)+'">'+
+ '<span class="division-tile-index">'+safe(d.marker)+'</span><strong>'+safe(d.name)+'</strong>'+
+ '<span>'+safe(d.short)+'</span><small>'+safe(d.evaluators.map(e=>e.name).join(' · '))+'</small></button>').join('')+'</div></section>'+
+ '<div class="dashboard-split"><section class="surface-card"><h3>All nine monitoring workspaces</h3>'+
+ '<p class="card-description">Original routes and reports are unchanged. Workspaces are separate from the eight geographical division destinations.</p>'+
+ '<div class="workspace-grid">'+manifest.workspaces.map(w=>'<button type="button" class="workspace-tile" data-workspace="'+safe(w.id)+'">'+
+ '<span class="tile-bullet" style="--tile:'+safe((divisionForWorkspace(w.id)?.color)||'#79c9a5')+'"></span>'+
+ '<span>'+safe(w.name)+'<small>'+w.sections.length+' reports ↗</small></span></button>').join('')+'</div></section>'+
+ '<section class="surface-card"><h3>Fictional roster source groups</h3>'+
+ '<p class="card-description">These eight sample-data group labels are not the same as the eight company districts. The original sample has not been remapped.</p>'+
+ '<div class="table-scroll"><table class="data-table"><thead><tr><th>Source group</th><th>Fictional people</th></tr></thead><tbody>'+
+ sourceGroups.map(d=>'<tr><td>'+safe(d[0])+'</td><td><strong>'+safe(d[1])+'</strong></td></tr>').join('')+'</tbody></table></div></section></div>';
 }
 function renderWorkspace(id){
- const d=DISTRICTS.find(x=>x.id===id),w=wspace(id);if(!w)return;
- heading(d?.name||w.name,'Explore '+w.sections.length+' original report routes within '+(d?.short||w.name)+'.');
- $('content-body').innerHTML='<section class="surface-card"><div class="district-heading"><div class="giant-number">'+String(DISTRICTS.findIndex(x=>x.id===id)+1).padStart(2,'0')+'</div><div><h3 style="margin-bottom:6px">'+safe(d?.short||w.name)+'</h3><p class="card-description" style="margin-bottom:0">'+safe(d?.desc||'Read-only workspace')+'</p></div></div><p class="source-note">The routes and sample classifications below come from the unchanged original data manifest. Select a report to inspect its route or open its full existing fictional report.</p><div class="section-grid">'+
+ const w=wspace(id);if(!w)return;
+ heading(w.name,'Explore '+w.sections.length+' original report routes in this preserved fictional monitoring workspace.');
+ $('content-body').innerHTML='<section class="surface-card"><div class="district-heading"><div class="giant-number">'+String(manifest.workspaces.findIndex(x=>x.id===id)+1).padStart(2,'0')+'</div><div><h3 style="margin-bottom:6px">'+safe(w.name)+'</h3><p class="card-description" style="margin-bottom:0">'+'Read-only reporting workspace, independent of the eight geographical company divisions.'+'</p></div></div><p class="source-note">The routes and sample classifications below come from the unchanged original data manifest. Select a report to inspect its route or open its full existing fictional report.</p><div class="section-grid">'+
  w.sections.map((s,i)=>'<button type="button" class="section-tile" data-report="'+safe(id+':'+s.id)+'"><small>REPORT '+String(i+1).padStart(2,'0')+' / '+safe(sourceStatus(s))+'</small><b>'+safe(s.name)+' ↗</b></button>').join('')+
  '</div></section>';
 }
@@ -253,10 +265,10 @@ function renderEmployeeJourney(key){
 }
 function globalSearchResults(q){
  const term=q.trim().toLowerCase();
- if(!term)return '<p class="empty-state">Search the 51 fictional people, nine destinations or 86 reports.</p>';
+ if(!term)return '<p class="empty-state">Search the 51 fictional people, eight divisions or 86 reports.</p>';
  const results=[];
  employees.filter(e=>[e.name,e.dept,e.role,e.id].join(' ').toLowerCase().includes(term)).slice(0,8).forEach(e=>results.push({type:'Person',text:e.name,sub:e.dept,action:'person',key:e.k}));
- DISTRICTS.filter(d=>[d.name,d.short,d.desc].join(' ').toLowerCase().includes(term)).slice(0,6).forEach(d=>results.push({type:'Destination',text:d.name,sub:d.short,action:'world',key:d.id}));
+ DISTRICTS.filter(d=>[d.name,d.short,d.desc,...d.evaluators.map(e=>e.name)].join(' ').toLowerCase().includes(term)).slice(0,6).forEach(d=>results.push({type:'Destination',text:d.name,sub:d.short,action:'world',key:d.id}));
  manifest.workspaces.forEach(w=>w.sections.filter(s=>s.name.toLowerCase().includes(term)).slice(0,5).forEach(s=>results.push({type:'Report',text:s.name,sub:w.name,action:'report',key:w.id+':'+s.id})));
  return results.slice(0,22).map(r=>'<button type="button" class="search-result" data-search-action="'+safe(r.action)+'" data-key="'+safe(r.key)+'"><strong>'+safe(r.text)+'</strong><span>'+safe(r.type)+' · '+safe(r.sub)+' ↗</span></button>').join('')||'<p class="empty-state">No matching fictional records or destinations.</p>';
 }
@@ -300,7 +312,7 @@ async function start(){
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
  renderDistrictStrip();fillSummary();
  const labelsRoot=$('landmark-labels');try{
-  const mod=await import('./world.js?v=1.2.1');
+  const mod=await import('./world.js?v=1.3.0');
   world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
