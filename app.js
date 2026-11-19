@@ -306,35 +306,80 @@ function globalSearchResults(q){
  return results.slice(0,22).map(r=>'<button type="button" class="search-result" data-search-action="'+safe(r.action)+'" data-key="'+safe(r.key)+'"><strong>'+safe(r.text)+'</strong><span>'+safe(r.type)+' · '+safe(r.sub)+' ↗</span></button>').join('')||'<p class="empty-state">No matching fictional records or destinations.</p>';
 }
 function openSearch(){const d=$('search-dialog');d.showModal();$('global-search').focus();$('search-results').innerHTML=globalSearchResults($('global-search').value);}
+function updateSoundUI(){
+ const on=sound.enabled;
+ for(const id of ['hud-audio','intro-audio'])$(id)?.setAttribute('aria-pressed',String(on));
+ $('hud-audio-label').textContent=on?'Sound on':'Sound off';
+ $('intro-audio-label').textContent=on?'Ambient sound on':'Enable ambient sound';
+ $('hud-audio').setAttribute('aria-label',on?'Mute ambient music and sound effects':'Enable original ambient music and sound effects');
+ $('intro-audio').setAttribute('aria-label',on?'Disable original soundtrack':'Enable original soundtrack');
+}
+async function toggleAudio(){
+ const on=await sound.toggle();
+ updateSoundUI();if(on)sound.tap();
+ if(!sound.supported){
+  $('hud-audio').disabled=true;$('intro-audio').disabled=true;
+  $('hud-audio').title='Audio is not supported by this browser';
+ }
+}
 function wireEvents(){
- document.querySelectorAll('.nav-link').forEach(b=>b.addEventListener('click',()=>{location.hash=b.dataset.view==='world'?'#overview':'#'+b.dataset.view;}));
  window.MADDIE_INTRO?.register(startIntro,()=>finishIntro({focus:false}));
- $('tour-start').addEventListener('click',()=>{if(force2D)toggleMode();if(world)world.startTour();else location.hash='#journey';});
- $('open-map').addEventListener('click',()=>$('district-strip').scrollIntoView({behavior:motionEnabled?'smooth':'instant'}));
- $('all-reports').addEventListener('click',()=>location.hash='#dashboard');
- $('back-to-world').addEventListener('click',()=>location.hash='#overview');
- $('panel-dismiss').addEventListener('click',()=>{history.replaceState(null,'','#overview');clearDistrict();});
- $('reset-world').addEventListener('click',()=>{history.replaceState(null,'','#overview');clearDistrict();});
- $('zoom-in').addEventListener('click',()=>world?.zoom(-12));
- $('zoom-out').addEventListener('click',()=>world?.zoom(12));
- $('world-mode').addEventListener('click',toggleMode);
- $('motion-toggle').addEventListener('click',()=>{motionEnabled=!motionEnabled;world?.setMotion(motionEnabled);$('motion-toggle').setAttribute('aria-pressed',String(motionEnabled));});
- $('motion-toggle').setAttribute('aria-pressed',String(motionEnabled));
- $('search-toggle').addEventListener('click',openSearch);$('search-close').addEventListener('click',()=>$('search-dialog').close());
+ $('tour-start').addEventListener('click',()=>{if(force2D)toggleMode();if(world)world.startTour();else location.hash='#journey';sound.reveal();});
+ $('division-tour').addEventListener('click',()=>{closeDivisionMenu();if(force2D)toggleMode();world?.startTour();sound.reveal();});
+ $('open-map').addEventListener('click',()=>{openDivisionMenu();sound.tap();});
+ $('hud-divisions').addEventListener('click',()=>{if($('division-menu').hidden)openDivisionMenu();else closeDivisionMenu();sound.tap();});
+ $('division-menu-close').addEventListener('click',()=>{closeDivisionMenu();$('hud-divisions').focus();});
+ $('hud-reports').addEventListener('click',()=>{sound.tap();location.hash='#dashboard';});
+ $('content-overview').addEventListener('click',()=>location.hash='#dashboard');
+ $('content-search').addEventListener('click',openSearch);
+ $('back-to-world').addEventListener('click',()=>{location.hash=selectedDistrict?'#world:'+selectedDistrict:'#overview';});
+ $('division-return').addEventListener('click',()=>{history.replaceState(null,'','#overview');clearDistrict();sound.tap();});
+ $('division-details').addEventListener('click',()=>{setDetails(!document.body.classList.contains('details-open'));sound.tap();});
+ $('panel-dismiss').addEventListener('click',()=>{setDetails(false);$('division-details').focus();sound.tap();});
+ $('reset-world').addEventListener('click',()=>{history.replaceState(null,'','#overview');clearDistrict();sound.tap();});
+ $('zoom-in').addEventListener('click',()=>{world?.zoom(-12);sound.tap();});
+ $('zoom-out').addEventListener('click',()=>{world?.zoom(12);sound.tap();});
+ $('world-mode').addEventListener('click',()=>{toggleMode();sound.tap();});
+ $('hud-motion').addEventListener('click',()=>{
+  motionEnabled=!motionEnabled;world?.setMotion(motionEnabled);
+  $('hud-motion').setAttribute('aria-pressed',String(motionEnabled));
+  sound.tap();
+ });
+ $('hud-motion').setAttribute('aria-pressed',String(motionEnabled));
+ $('hud-search').addEventListener('click',openSearch);
+ $('search-close').addEventListener('click',()=>$('search-dialog').close());
  $('employee-close').addEventListener('click',()=>$('employee-dialog').close());
+ $('hud-audio').addEventListener('click',toggleAudio);
+ $('intro-audio').addEventListener('click',toggleAudio);
+ updateSoundUI();
  $('global-search').addEventListener('input',e=>{$('search-results').innerHTML=globalSearchResults(e.target.value);});
- document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch();}});
+ document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch();}
+  if(e.key==='Escape'){closeDivisionMenu();if(document.body.classList.contains('details-open'))setDetails(false);}
+ });
+ document.addEventListener('pointerdown',e=>{
+  if(!$('division-menu').hidden&&!e.target.closest('.division-dock'))closeDivisionMenu();
+ });
  document.addEventListener('click',e=>{
-  const result=e.target.closest('[data-search-action]');if(result){
+  const result=e.target.closest('[data-search-action]');
+  if(result){
    $('search-dialog').close();const action=result.dataset.searchAction,key=result.dataset.key;
-   if(action==='person')employeeModal(key);if(action==='report')location.hash='#'+key;if(action==='world')location.hash='#world:'+key;
-   return;
+   if(action==='person')employeeModal(key);
+   if(action==='report')location.hash='#'+key;
+   if(action==='world')location.hash='#world:'+key;
+   sound.tap();return;
   }
   const individual=e.target.closest('[data-employee-journey]');if(individual){$('employee-dialog').close();location.hash='#employee-journey:'+individual.dataset.employeeJourney;return;}
-  const emp=e.target.closest('[data-employee]');if(emp){employeeModal(emp.dataset.employee);return;}
-  const report=e.target.closest('[data-report]');if(report){location.hash='#'+report.dataset.report;return;}
-  const work=e.target.closest('[data-workspace]');if(work){location.hash='#'+work.dataset.workspace;return;}
-  const district=e.target.closest('[data-district]');if(district){location.hash='#world:'+district.dataset.district;return;}
+  const emp=e.target.closest('[data-employee]');if(emp){employeeModal(emp.dataset.employee);sound.tap();return;}
+  const report=e.target.closest('[data-report]');if(report){location.hash='#'+report.dataset.report;sound.tap();return;}
+  const work=e.target.closest('[data-workspace]');if(work){location.hash='#'+work.dataset.workspace;sound.tap();return;}
+  const district=e.target.closest('[data-district]');
+  if(district){
+   const id=district.dataset.district;
+   closeDivisionMenu();
+   if(location.hash==='#world:'+id)selectDistrict(id);else location.hash='#world:'+id;
+   return;
+  }
   const worldBtn=e.target.closest('[data-world]');if(worldBtn){location.hash='#world:'+worldBtn.dataset.world;return;}
  });
  addEventListener('hashchange',()=>routeTo(location.hash));
