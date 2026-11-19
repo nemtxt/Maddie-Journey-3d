@@ -220,3 +220,38 @@ body.view-world:not(.intro-active) .world-stage{margin-top:0}
 }
 @media(max-width:390px){.division-grid{grid-template-columns:1fr}.division-tile{min-height:120px}}
 @media(prefers-reduced-motion:reduce){.division-tile,.world-label{transition:none!important}}
+
+/* V1.3 composition: readable typography against richly detailed 3D scenery. */
+body.view-world:not(.intro-active) .topbar{
+ background:rgba(239,254,250,.66);
+ border-color:rgba(255,255,255,.87);
+ box-shadow:0 14px 40px rgba(34,75,75,.105);
+}
+body.view-world:not(.intro-active) .nav-link{color:#345860;}
+body.view-world:not(.intro-active) .nav-link.is-active{
+ background:rgba(255,255,255,.93);color:#264a53;
+}
+body.view-world:not(.intro-active) .topnav{
+ background:rgba(237,250,247,.43);
+}
+body.view-world:not(.intro-active) .hero-copy::before{
+ content:"";position:absolute;z-index:-1;pointer-events:none;
+ left:-90px;right:-85px;top:-64px;bottom:-45px;
+ background:radial-gradient(ellipse at 22% 40%,rgba(220,244,242,.88) 0%,rgba(220,244,242,.65) 30%,rgba(220,244,242,0) 76%);
+}
+body.view-world:not(.intro-active) .hero-copy h1{color:#1b4550}
+body.view-world:not(.intro-active) .hero-copy h1 em{color:#d96958}
+body.view-world:not(.intro-active) .hero-copy p{color:#315d63;font-weight:600}
+body.view-world:not(.intro-active) .focus-panel{
+ background:rgba(251,255,251,.91);
+ color:#294951;
+ border-color:rgba(255,255,255,.9);
+}
+body.view-world:not(.intro-active) .focus-panel p{color:#657f82;}
+body.view-world:not(.intro-active) .world-label{background:rgba(26,57,66,.91)}
+@media(max-width:680px){
+ body.view-world:not(.intro-active) .hero-copy::before{
+  top:-35px;bottom:-22px;left:-25px;right:-15px;
+  background:linear-gradient(95deg,rgba(219,243,241,.83),rgba(219,243,241,.16));
+ }
+}
