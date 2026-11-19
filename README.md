@@ -1,8 +1,18 @@
 # Maddie Journey — Interactive 3D World
 
-**V1.0 · independent fictional-data prototype · November 2026**
+**V1.1 · independent fictional-data prototype · November 2026**
 
 An Awwwards-inspired, interactive miniature world for exploring the Maddie Journey People & Culture reporting environment. This project is deliberately **separate from** [the original fictional prototype](https://github.com/nemtxt/Maddie-Journey-Prototype), which has not been changed.
+
+## V1.1 — Sky-to-island cinematic entrance
+
+The default root / `#overview` opens a full-screen, atmospheric sky with animated cloud layers, the headline **Welcome to Maddie Journey**, and one **Start** action. It deliberately uses the **same Three.js scene and WebGL renderer** as the floating island—no scene swap or video overlay.
+
+**On Start:** GSAP coordinates the welcome typography fade, atmospheric cloud reveal, continuous Bezier camera descent, and the arrival of the existing world navigation and reports. The in-scene 3D clouds drift gently throughout. The camera path ends at the original orbit control target.
+
+**Accessibility and graceful fallbacks:** Skip intro is always available; reduced-motion visitors transition directly to the world; the camera descent uses requestAnimationFrame if GSAP fails to load; an existing 2D fallback is shown if WebGL fails. Deep links into employee and report routes bypass the entrance. Controls remain keyboard navigable.
+
+**Dependencies:** Three.js 0.161.0 and GSAP 3.12.5 are served from jsDelivr; no account, billing, server-side rendering or paid animation plugins are required. A network connection is needed to load these libraries.
 
 ## Implemented
 - Original stylized 3D floating island environment created with Three.js: low-poly mountains and snowcaps, forest, tree clusters, river, lake, waterfall, miniature buildings and floating clouds.
