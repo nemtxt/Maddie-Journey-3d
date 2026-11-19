@@ -43,7 +43,7 @@ try{
  assert.equal(await page.locator('#division-menu').isVisible(),true);
  assert.equal(await page.locator('.division-menu-item').count(),8);
  await page.locator('.division-menu-item[data-district="hr"]').click();
- await page.waitForFunction(()=>location.hash==='#world:hr'&&document.querySelector('#division-title')?.textContent==='HR',null,{timeout:11000});
+ await page.waitForFunction(()=>location.hash==='#world:hr'&&document.querySelector('#division-title')?.textContent==='HR'&&document.querySelector('#division-headline')?.hidden===false,null,{timeout:11000});
  assert.equal(await page.locator('#division-headline').isVisible(),true);
  assert.ok(parseFloat(await page.locator('#division-title').evaluate(el=>getComputedStyle(el).fontSize))>=45,
    'Selected division title must be large');
