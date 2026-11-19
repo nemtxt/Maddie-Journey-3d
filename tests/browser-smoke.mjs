@@ -50,6 +50,7 @@ try{
  assert.equal(await page.locator('#focus-panel').isVisible(),false,'Details should not obscure the island by default');
  await page.screenshot({path:'browser-results/03-hr-large-headline.png'});
  await page.locator('#division-details').click();
+ await page.locator('#focus-panel').waitFor({state:'visible',timeout:6000});
  assert.equal(await page.locator('#focus-panel').isVisible(),true);
  assert.match(await page.locator('#panel-content').innerText(),/GIEZELLE/);
  assert.match(await page.locator('#panel-content').innerText(),/KURT/);
