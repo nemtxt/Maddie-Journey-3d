@@ -1,5 +1,6 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 import {buildDivisionDistrict,enhanceTerrain,enhanceForest} from './world-assets.js?v=1.3.0';
+import {buildStoryEnvironment} from './dream-details.js?v=1.5.0';
 
 /** A lightweight bespoke Three.js diorama, no downloadable models or premium assets. */
 export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{},motionEnabled=true,intro=true}) {
@@ -166,6 +167,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   routePoints.splice(3,0,new THREE.Vector3(1,2.35,27));
   routePoints.splice(6,0,new THREE.Vector3(36,2.35,1));
   const curve=new THREE.CatmullRomCurve3(routePoints,false,'centripetal',.5);
+  const storyDetails=buildStoryEnvironment(THREE,world,{districts,route:curve,lowQuality});
   const routeBase=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.91,10,false),soil);world.add(routeBase);
   const routePaving=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.70,10,false),sand);world.add(routePaving);
   const routeLit=new THREE.Mesh(new THREE.TubeGeometry(curve,220,.08,5,false),gold);world.add(routeLit);
@@ -335,6 +337,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
       camera.position.lerp(desiredPosition,animate?.15:1);camera.lookAt(orbit.focus);
     }
     animatedForest.update(time,animate);
+    storyDetails.update(time,animate);
     if(animate){motes.rotation.y=Math.sin(time*.000085)*.015;motes.position.y=Math.sin(time*.0002)*.5;}
     if(animate){clouds.forEach(c=>{c.obj.position.x=c.x+Math.sin(time*.00012*c.speed+c.z)*10;});
       waterRipples.forEach((r,i)=>{r.scale.setScalar(.6+((time*.00017+i*.22)%1)*1.3);r.material.opacity=.38*(1-(time*.00017+i*.22)%1);});
@@ -351,5 +354,5 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   function visibility(){run=!document.hidden;last=performance.now();}
   document.addEventListener('visibilitychange',visibility);
   raf=requestAnimationFrame(tick);
-  return {focus,reset,zoom,startTour,stopTour,setMotion,setIntroProgress,endIntro,dispose(){disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
+  return {focus,reset,zoom,startTour,stopTour,setMotion,setIntroProgress,endIntro,detailCounts:storyDetails.counts,dispose(){storyDetails.dispose();disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
 }
