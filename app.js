@@ -395,6 +395,7 @@ async function start(){
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
  sceneReady=true;
+ document.body.classList.remove('fallback-boot');
  $('intro-start').disabled=false;
  $('intro-status').textContent=world?'Your 3D world is ready.':'A 2D journey is available on this device.';
  if(window.MADDIE_INTRO?.dismissed||!showIntroOnEntry())finishIntro({focus:false});
