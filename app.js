@@ -102,15 +102,43 @@ function showView(view){
  // Fullscreen world removes the traditional navigation tabs; dashboards retain their own back controls.
  if(!inWorld)world?.stopTour();
 }
+function setDetails(open){
+ const on=Boolean(open&&selectedDistrict);
+ document.body.classList.toggle('details-open',on);
+ $('division-details').setAttribute('aria-expanded',String(on));
+ $('focus-panel').setAttribute('aria-hidden',String(!on));
+ if(on)$('panel-dismiss').focus({preventScroll:true});
+}
+function closeDivisionMenu(){
+ $('division-menu').hidden=true;$('hud-divisions').setAttribute('aria-expanded','false');
+}
+function openDivisionMenu(){
+ $('division-menu').hidden=false;$('hud-divisions').setAttribute('aria-expanded','true');
+}
 function clearDistrict(){
- selectedDistrict=null;document.body.classList.remove('has-division-selection');world?.reset();
+ selectedDistrict=null;document.body.classList.remove('has-division-selection');setDetails(false);
+ $('division-headline').hidden=true;
+ world?.reset();
  $('panel-kicker').textContent='DIVISION GUIDE / 01—08';
  $('panel-content').innerHTML='<div class="panel-feature-icon">✳</div><h2>Discover eight division districts.</h2><p>Select a landmark to see its evaluator team, environmental identity and linked monitoring workspaces.</p><div class="guide-divider"></div><p class="small-note">The original nine monitoring workspaces and all fictional reports remain intact.</p>';
  paintStrip();
 }
 function selectDistrict(id,{fromTour=false,fromRoute=false}={}){
  const d=DISTRICTS.find(x=>x.id===id);if(!d)return;
- selectedDistrict=d.id;document.body.classList.add('has-division-selection');$('panel-kicker').textContent='COMPANY DIVISION / '+d.marker+'—08';
+ const previous=selectedDistrict;
+ selectedDistrict=d.id;
+ document.body.classList.add('has-division-selection');
+ setDetails(false);
+ const headline=$('division-headline');
+ headline.hidden=false;
+ headline.classList.toggle('is-long',d.name.length>21);
+ headline.style.setProperty('--division-glow',d.color);
+ if(previous!==d.id){headline.style.animation='none';void headline.offsetWidth;headline.style.animation='';}
+ $('division-number').textContent=d.marker+' / 08';
+ $('division-title').textContent=d.name;
+ $('division-subtitle').textContent=d.short;
+ $('division-summary').textContent=d.desc;
+ $('panel-kicker').textContent='COMPANY DIVISION / '+d.marker+'—08';
  const names=d.evaluators.map(p=>'<div class="evaluator-person"><span class="evaluator-avatar" aria-hidden="true">'+safe(initials(p.name))+'</span><span><strong>'+safe(p.name)+'</strong><small>'+safe(p.role)+'</small></span></div>').join('');
  const related=d.workspaces.map(wspace).filter(Boolean);
  $('panel-content').innerHTML='<div class="panel-tag" style="background:'+safe(d.color)+'26;color:#345d64">DIVISION DESTINATION</div>'+
@@ -120,12 +148,16 @@ function selectDistrict(id,{fromTour=false,fromRoute=false}={}){
  '<div class="panel-section-list">'+related.map(w=>'<button type="button" data-workspace="'+safe(w.id)+'"><span>'+safe(w.name)+'</span><b>'+w.sections.length+' reports ↗</b></button>').join('')+'</div>'+
  '<button type="button" class="panel-cta" data-workspace="'+safe(related[0]?.id||'people')+'">Explore linked dashboards <span>↗</span></button>'+
  '<p class="panel-qualification">Division contact details are reference assignments, separate from the 51 fictional employee records.</p>';
+ if(previous!==d.id)sound.select();
  if(!fromTour)world?.focus(id);
+ closeDivisionMenu();
  paintStrip();
  if(!fromTour&&!fromRoute&&location.hash!=='#world:'+id)history.replaceState(null,'','#world:'+id);
 }
 function paintStrip(){
- document.querySelectorAll('.route-stop').forEach(b=>{b.classList.toggle('is-selected',b.dataset.district===selectedDistrict);b.setAttribute('aria-pressed',String(b.dataset.district===selectedDistrict));});
+ document.querySelectorAll('.division-menu-item').forEach(b=>{
+  b.setAttribute('aria-pressed',String(b.dataset.district===selectedDistrict));
+ });
 }
 function worldSelected(id,flags){selectDistrict(id,{fromTour:Boolean(flags?.fromTour)});}
 function fallback2D(){
@@ -147,10 +179,9 @@ function fillSummary(root){
  $('stat-districts').textContent=String(DISTRICTS.length).padStart(2,'0');
  $('stat-reports').textContent=String(reportTotal()).padStart(2,'0');
 }
-function renderDistrictStrip(){
- $('district-strip').innerHTML=DISTRICTS.map((d,i)=>'<button type="button" class="route-stop" data-district="'+d.id+'" aria-pressed="false">'+
- '<span class="stop-icon" style="color:'+d.color+'">'+(divisionIcons[d.id]||'')+'</span>'+
- '<span class="stop-name">'+safe(d.name)+'<small>'+String(i+1).padStart(2,'0')+' / '+safe(d.short)+'</small></span></button>').join('');
+function renderDivisionMenu(){
+ $('division-menu-list').innerHTML=DISTRICTS.map(d=>'<button type="button" class="division-menu-item" data-district="'+safe(d.id)+'" aria-pressed="false" style="--item-accent:'+safe(d.color)+'">'+
+ '<span class="menu-number">'+safe(d.marker)+'</span><span class="menu-copy"><strong>'+safe(d.name)+'</strong><small>'+safe(d.short)+'</small></span></button>').join('');
 }
 function heading(title,desc){
  $('content-heading').textContent=title;$('content-subtitle').textContent=desc||'';$('content-area').scrollIntoView({behavior:motionEnabled?'smooth':'instant',block:'start'});
@@ -312,7 +343,7 @@ async function start(){
  wireEvents();
  try{const [res,snapshot]=await Promise.all([fetch('./data/mock-data-manifest.json',{cache:'no-cache'}),fetch('./data/fictional-snapshot.json',{cache:'no-cache'})]);if(!res.ok||!snapshot.ok)throw new Error('Fictional data unavailable');manifest=await res.json();const demo=await snapshot.json();employees=demo.people||[];divisionSummaries=demo.divisions||[];if(employees.length!==51||divisionSummaries.length!==8)console.warn('Unexpected fictional roster size');}
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
- renderDistrictStrip();fillSummary();
+ renderDivisionMenu();fillSummary();
  const labelsRoot=$('landmark-labels');try{
   const mod=await import('./world.js?v=1.4.0');
   world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,onHover:()=>sound.hover(),motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
