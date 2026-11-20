@@ -60,7 +60,9 @@ test('welcome scene is fullscreen and Start is accessible after loading',()=>{
  assert.ok(html.includes('id="intro-start"'));
  assert.ok(!html.includes('id="intro-start" disabled'));
  assert.ok(html.includes('window.MADDIE_INTRO'));
- assert.ok(html.includes('setTimeout(function()'));
+ assert.ok(html.includes('setTimeout(emergencyExit,11000)'));
+ assert.ok(html.includes('complete:function()'));
+ assert.ok(html.includes('function emergencyExit()'));
  assert.ok(html.includes('id="intro-sky-veil"'));
  assert.ok(css.includes('.intro-sky-veil'));
  assert.ok(html.includes('styles.css?v='));
