@@ -32,13 +32,25 @@ jobs:
           node-version: '22'
       - name: Install browser test dependency
         run: npm install --no-save playwright@1.58.0
-      - name: Install Chromium
+      - name: Detect preinstalled Chrome
+        id: browser
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            google-chrome --version
+            echo "system=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "system=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install Chromium when system Chrome is unavailable
+        if: steps.browser.outputs.system != 'true'
         run: npx playwright install --with-deps chromium
       - name: Serve static prototype
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/maddie-server.log 2>&1 &
           sleep 2
       - name: Check intro, Start, fail-safe and deep links
+        env:
+          CI_USE_SYSTEM_CHROME: ${{ steps.browser.outputs.system }}
         run: node tests/browser-smoke.mjs
       - name: Capture browser screenshots
         if: always()
