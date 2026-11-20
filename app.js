@@ -122,6 +122,7 @@ function openDivisionMenu(){
  $('division-menu').hidden=false;$('hud-divisions').setAttribute('aria-expanded','true');
 }
 function clearDistrict(){
+ if(tourActive)world?.stopTour();
  selectedDistrict=null;document.body.classList.remove('has-division-selection');setDetails(false);
  $('division-headline').hidden=true;
  hideReportPreview();
@@ -132,6 +133,7 @@ function clearDistrict(){
 }
 function selectDistrict(id,{fromTour=false,fromRoute=false,fromWorld=false}={}){
  const d=DISTRICTS.find(x=>x.id===id);if(!d)return;
+ if(!fromTour&&tourActive)world?.stopTour();
  const previous=selectedDistrict;
  if(previous!==d.id)previewDismissed=false;
  selectedDistrict=d.id;
@@ -410,11 +412,19 @@ async function toggleAudio(){
 }
 function wireEvents(){
  window.MADDIE_INTRO?.register(startIntro,()=>finishIntro({focus:false}));
- $('tour-start').addEventListener('click',()=>{if(force2D)toggleMode();if(world)world.startTour();else location.hash='#journey';sound.reveal();});
- $('division-tour').addEventListener('click',()=>{closeDivisionMenu();if(force2D)toggleMode();world?.startTour();sound.reveal();});
+ $('tour-start').addEventListener('click',beginTour);
+ $('division-tour').addEventListener('click',beginTour);
  $('open-map').addEventListener('click',()=>{openDivisionMenu();sound.tap();});
  $('hud-divisions').addEventListener('click',()=>{if($('division-menu').hidden)openDivisionMenu();else closeDivisionMenu();sound.tap();});
  $('division-menu-close').addEventListener('click',()=>{closeDivisionMenu();$('hud-divisions').focus();});
+ $('hud-map').addEventListener('click',()=>{$('fast-travel-map').hidden?openFastMap():closeFastMap({restoreFocus:true});sound.tap();});
+ $('fast-map-close').addEventListener('click',()=>closeFastMap({restoreFocus:true}));
+ $('fast-map-tour').addEventListener('click',beginTour);
+ $('tour-pause').addEventListener('click',()=>{if(tourActive)world?.pauseTour();sound.tap();});
+ $('tour-next').addEventListener('click',()=>{if(tourActive)world?.nextTourStop();sound.tap();});
+ $('tour-exit').addEventListener('click',()=>{world?.stopTour();$('hud-divisions').focus({preventScroll:true});sound.tap();});
+ $('preview-close').addEventListener('click',()=>{previewDismissed=true;hideReportPreview();$('hud-divisions').focus({preventScroll:true});});
+ $('preview-open-workspace').addEventListener('click',()=>{location.hash='#'+($('preview-open-workspace').dataset.workspace||'people');sound.tap();});
  $('hud-reports').addEventListener('click',()=>{sound.tap();location.hash='#dashboard';});
  $('content-overview').addEventListener('click',()=>location.hash='#dashboard');
  $('content-search').addEventListener('click',openSearch);
@@ -441,10 +451,11 @@ function wireEvents(){
  $('global-search').addEventListener('input',e=>{$('search-results').innerHTML=globalSearchResults(e.target.value);});
  document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch();}
-  if(e.key==='Escape'){closeDivisionMenu();if(document.body.classList.contains('details-open'))setDetails(false);}
+  if(e.key==='Escape'){closeDivisionMenu();closeFastMap();if(document.body.classList.contains('details-open'))setDetails(false);}
  });
  document.addEventListener('pointerdown',e=>{
   if(!$('division-menu').hidden&&!e.target.closest('.division-dock'))closeDivisionMenu();
+  if(!$('fast-travel-map').hidden&&!e.target.closest('#fast-travel-map')&&!e.target.closest('#hud-map'))closeFastMap();
  });
  document.addEventListener('click',e=>{
   const result=e.target.closest('[data-search-action]');
