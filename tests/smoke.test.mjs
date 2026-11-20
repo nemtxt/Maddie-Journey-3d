@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {DIVISIONS,divisionForWorkspace} from '../divisions.js';
+import {getTourStops,getFastTravelPoints,getPreviewReports,normalizeTourIndex,TOUR_STOP_SECONDS} from '../expedition-system.js';
 
 const root=resolve(import.meta.dirname,'..');
 const read=(name)=>readFileSync(resolve(root,name),'utf8');
@@ -220,4 +221,47 @@ test('Eight 3D adventure outposts use original shared geometric assets',()=>{
  assert.equal(snapshot.people.length,51);
  assert.equal(manifest.workspaces.length,9);
  assert.equal(manifest.workspaces.reduce((sum,w)=>sum+w.sections.length,0),86);
+});
+
+
+test('V1.7 route plan includes eight real company division waypoints in order',()=>{
+ const stops=getTourStops(DIVISIONS);
+ assert.equal(stops.length,8);
+ assert.deepEqual(stops.map(x=>x.id),['hr','revenue','design','corporate','media','it','gencon','business']);
+ assert.equal(stops[0].index,1);
+ assert.equal(stops.at(-1).index,8);
+ assert.ok(TOUR_STOP_SECONDS>=5);
+ assert.equal(normalizeTourIndex(8,8),0);
+ assert.equal(normalizeTourIndex(-1,8),7);
+});
+
+test('fast travel map derives accessible coordinates from actual division locations',()=>{
+ const markers=getFastTravelPoints(DIVISIONS);
+ assert.equal(markers.length,8);
+ assert.ok(markers.every(m=>m.left>=8&&m.left<=92&&m.top>=10&&m.top<=90));
+ assert.equal(new Set(markers.map(m=>m.id)).size,8);
+ assert.ok(markers.every(m=>m.name&&m.color&&m.marker));
+});
+
+test('contextual previews use only the immutable 86-route original fictional report manifest',()=>{
+ const allRoutes=new Set(manifest.workspaces.flatMap(w=>w.sections.map(s=>w.id+':'+s.id)));
+ for(const d of DIVISIONS){
+  const p=getPreviewReports(d,manifest,3);
+  assert.ok(p.length>=1&&p.length<=3);
+  assert.ok(p.every(x=>allRoutes.has(x.route.slice(1))));
+  assert.ok(p.every(x=>x.reportName&&x.workspaceName));
+ }
+ assert.deepEqual(getPreviewReports({workspaces:['missing']},manifest,3),[]);
+});
+
+test('V1.7 expedition UI has keyboard-accessible map and tour controls',()=>{
+ const html=read('index.html'),app=read('app.js'),world=read('world.js'),css=read('styles.css');
+ for(const id of ['hud-map','fast-travel-map','fast-map-canvas','fast-map-pins','fast-map-tour','fast-map-close','expedition-tour','tour-pause','tour-next','tour-exit','report-preview','preview-reports','preview-open-workspace','preview-close']){
+  assert.ok(html.includes('id="'+id+'"'),'Missing '+id);
+ }
+ for(const hook of ['getFastTravelPoints','getPreviewReports','getTourStops','renderFastMap','beginTour','updateTourProgress','finishTour','closeFastMap','showReportPreview'])assert.ok((app+world).includes(hook),'Missing '+hook);
+ for(const hook of ['CubicBezierCurve3','startFlight','pauseTour','nextTourStop','TOUR_STOP_SECONDS','flightRibbon','onTourProgress','onTourComplete'])assert.ok(world.includes(hook),'Missing world '+hook);
+ assert.ok(css.includes('prefers-reduced-motion'));
+ assert.ok(css.includes('.fast-travel-map'));
+ assert.ok(html.includes('aria-expanded="false" aria-label="Open the eight-division fast travel map"'));
 });
