@@ -4,7 +4,7 @@ import {buildStoryEnvironment} from './dream-details.js?v=1.5.0';
 import {createAdventureAssets} from './adventure-assets.js?v=1.6.0';
 
 /** A lightweight bespoke Three.js diorama, no downloadable models or premium assets. */
-export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{},motionEnabled=true,intro=true}) {
+export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{},onTourProgress=()=>{},onTourComplete=()=>{},motionEnabled=true,intro=true}) {
   const stage=canvas.closest('.world-stage');
   const scene=new THREE.Scene();
   scene.background=new THREE.Color('#d6eef0');
@@ -253,7 +253,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   const orbit={theta:.35,phi:1.01,radius:107,target:new THREE.Vector3(overviewX,3,0),focus:new THREE.Vector3(overviewX,3,0),rDesired:107,thetaDesired:.35,phiDesired:1.01};
   const desiredPosition=new THREE.Vector3(),projected=new THREE.Vector3();
   const pointer={down:false,drag:false,x:0,y:0,theta:0,phi:0};
-  let active=null,touring=false,tourT=0,tourIndex=-1,run=true,animate=Boolean(motionEnabled),last=performance.now(),raf=0,disposed=false;
+  let active=null,touring=false,tourT=0,tourIndex=-1,tourElapsed=0,tourPaused=false,tourNotice=0,flight=null,run=true,animate=Boolean(motionEnabled),last=performance.now(),raf=0,disposed=false;
   const introState={active:Boolean(intro),progress:0};
   const introCameraPoint=new THREE.Vector3(),introLookPoint=new THREE.Vector3();
   const startEye=new THREE.Vector3(0,138,139);
@@ -279,17 +279,95 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
     camera.position.copy(desiredPosition);camera.lookAt(orbit.focus);
   }
   function fitRadius(){return Math.max(107,100/(2*Math.tan(39*Math.PI/360)*camera.aspect));}
+  const flightRibbon=new THREE.Mesh(
+    new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(),new THREE.Vector3(1,1,1)),20,.12,5,false),
+    new THREE.MeshBasicMaterial({color:'#f0c57c',transparent:true,opacity:.82,depthWrite:false})
+  );
+  flightRibbon.visible=false;flightRibbon.renderOrder=8;world.add(flightRibbon);
+  const flightSpark=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8),
+    new THREE.MeshBasicMaterial({color:'#fff7c5',transparent:true,opacity:.88,depthWrite:false}));
+  flightSpark.visible=false;world.add(flightSpark);
+  let sparkPath=null;
+  const easeJourney=t=>t*t*(3-2*t);
+  function startFlight(target,duration=2.9){
+    const fromEye=camera.position.clone();
+    const fromLook=orbit.focus.clone();
+    const toLook=target.clone();
+    const radius=Math.max(69,fitRadius()*.71),theta=.36,phi=1.02;
+    const toEye=new THREE.Vector3(
+      toLook.x+Math.sin(theta)*Math.sin(phi)*radius,
+      toLook.y+Math.cos(phi)*radius,
+      toLook.z+Math.cos(theta)*Math.sin(phi)*radius);
+    orbit.theta=orbit.thetaDesired=theta;
+    orbit.phi=orbit.phiDesired=phi;
+    orbit.radius=orbit.rDesired=radius;
+    orbit.focus.copy(toLook);orbit.target.copy(toLook);
+    if(!animate||duration<=0||introState.active){
+      flight=null;camera.position.copy(toEye);camera.lookAt(toLook);
+      flightRibbon.visible=false;flightSpark.visible=false;return;
+    }
+    const fromRoute=new THREE.Vector3(fromLook.x,5.4,fromLook.z);
+    const toRoute=new THREE.Vector3(toLook.x,5.4,toLook.z);
+    sparkPath=new THREE.CatmullRomCurve3([
+      fromRoute,new THREE.Vector3((fromRoute.x*2+toRoute.x)/3,7.5,(fromRoute.z*2+toRoute.z)/3),
+      new THREE.Vector3((fromRoute.x+toRoute.x*2)/3,8.4,(fromRoute.z+toRoute.z*2)/3),toRoute
+    ]);
+    flightRibbon.geometry.dispose();
+    flightRibbon.geometry=new THREE.TubeGeometry(sparkPath,55,.14,6,false);
+    flightRibbon.visible=true;flightSpark.visible=true;
+    flight={
+      elapsed:0,duration,fromLook,toLook,fromEye,toEye,
+      eyeCurve:new THREE.CubicBezierCurve3(fromEye,
+        fromEye.clone().add(new THREE.Vector3(0,17,0)),
+        toEye.clone().add(new THREE.Vector3(0,19,0)),toEye)
+    };
+  }
   function focus(id){const d=districts.find(item=>item.id===id);if(!d)return;
     districtGlow.position.set(d.x,16,d.z);districtGlow.color.set(d.color);districtGlow.intensity=lowQuality?.2:1.15;
-    active=id;adventureAssets.setActive(id);orbit.target.set(d.x,4,d.z);orbit.rDesired=Math.max(70,fitRadius()*.78);orbit.thetaDesired=.34;orbit.phiDesired=1;
+    active=id;adventureAssets.setActive(id);startFlight(new THREE.Vector3(d.x,4,d.z));
     nameNodes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===id)));
   }
-  function reset(){touring=false;active=null;adventureAssets.setActive(null);districtGlow.intensity=0;orbit.target.set(overviewX,3,0);orbit.rDesired=fitRadius();orbit.thetaDesired=.35;orbit.phiDesired=1;
+  function reset(){touring=false;tourPaused=false;active=null;adventureAssets.setActive(null);districtGlow.intensity=0;startFlight(new THREE.Vector3(overviewX,3,0),2.5);
     nameNodes.forEach(b=>b.setAttribute('aria-pressed','false'));}
   function zoom(delta){const fit=fitRadius();orbit.rDesired=THREE.MathUtils.clamp(orbit.rDesired+delta,Math.max(49,fit*.58),Math.max(146,fit*1.55));}
-  function startTour(){tourT=0;tourIndex=-1;touring=true;active=null;adventureAssets.setActive(null);}
-  function stopTour(){touring=false;}
-  function setMotion(enabled){animate=Boolean(enabled);if(!animate)stopTour();}
+  const TOUR_STOP_SECONDS=5.7;
+  function announceTour(){
+    if(!touring||tourIndex<0)return;
+    onTourProgress({
+      index:tourIndex,count:districts.length,id:districts[tourIndex].id,
+      name:districts[tourIndex].name,elapsed:tourElapsed,
+      stopProgress:Math.min(1,tourElapsed/TOUR_STOP_SECONDS),paused:tourPaused
+    });
+  }
+  function advanceTour(nextIndex){
+    if(nextIndex>=districts.length){stopTour({complete:true});return;}
+    tourIndex=nextIndex;tourElapsed=0;tourNotice=0;
+    const d=districts[tourIndex];
+    focus(d.id);
+    onSelect(d.id,{fromTour:true});
+    announceTour();
+  }
+  function startTour(){
+    touring=true;tourPaused=false;tourT=0;tourIndex=-1;tourElapsed=0;
+    advanceTour(0);
+  }
+  function pauseTour(paused){
+    if(!touring)return false;
+    tourPaused=typeof paused==='boolean'?paused:!tourPaused;
+    announceTour();return tourPaused;
+  }
+  function nextTourStop(){if(touring){tourPaused=false;advanceTour(tourIndex+1);}}
+  function stopTour({complete=false}={}){
+    const wasTouring=touring;touring=false;tourPaused=false;
+    if(wasTouring)onTourComplete({complete,index:tourIndex,total:districts.length});
+  }
+  function setMotion(enabled){
+    animate=Boolean(enabled);
+    if(!animate){
+      if(flight){const ending=flight.toLook.clone();flight=null;camera.lookAt(ending);flightRibbon.visible=false;flightSpark.visible=false;}
+      if(touring)stopTour();
+    }
+  }
   const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
   function pick(event){const rect=canvas.getBoundingClientRect();mouse.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const hit=raycaster.intersectObjects(hitTargets,false)[0];if(hit){const id=hit.object.userData.district;focus(id);onSelect(id,{fromWorld:true});}}
   canvas.addEventListener('pointerdown',e=>{pointer.down=true;pointer.drag=false;pointer.x=e.clientX;pointer.y=e.clientY;pointer.theta=orbit.thetaDesired;pointer.phi=orbit.phiDesired;canvas.setPointerCapture(e.pointerId);});
