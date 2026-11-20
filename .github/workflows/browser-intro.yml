@@ -9,6 +9,7 @@ on:
       - 'world-assets.js'
       - 'dream-details.js'
       - 'adventure-assets.js'
+      - 'expedition-system.js'
       - 'divisions.js'
       - 'styles.css'
       - 'soundscape.js'
