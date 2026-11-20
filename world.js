@@ -289,11 +289,11 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   flightSpark.visible=false;world.add(flightSpark);
   let sparkPath=null;
   const easeJourney=t=>t*t*(3-2*t);
-  function startFlight(target,duration=2.9){
+  function startFlight(target,duration=2.9,radiusScale=.71){
     const fromEye=camera.position.clone();
-    const fromLook=orbit.focus.clone();
+    const fromLook=flight?.currentLook?.clone()||orbit.focus.clone();
     const toLook=target.clone();
-    const radius=Math.max(69,fitRadius()*.71),theta=.36,phi=1.02;
+    const radius=Math.max(69,fitRadius()*radiusScale),theta=.36,phi=1.02;
     const toEye=new THREE.Vector3(
       toLook.x+Math.sin(theta)*Math.sin(phi)*radius,
       toLook.y+Math.cos(phi)*radius,
@@ -316,7 +316,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
     flightRibbon.geometry=new THREE.TubeGeometry(sparkPath,55,.14,6,false);
     flightRibbon.visible=true;flightSpark.visible=true;
     flight={
-      elapsed:0,duration,fromLook,toLook,fromEye,toEye,
+      elapsed:0,duration,fromLook,toLook,currentLook:fromLook.clone(),fromEye,toEye,
       eyeCurve:new THREE.CubicBezierCurve3(fromEye,
         fromEye.clone().add(new THREE.Vector3(0,17,0)),
         toEye.clone().add(new THREE.Vector3(0,19,0)),toEye)
@@ -327,7 +327,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
     active=id;adventureAssets.setActive(id);startFlight(new THREE.Vector3(d.x,4,d.z));
     nameNodes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===id)));
   }
-  function reset(){touring=false;tourPaused=false;active=null;adventureAssets.setActive(null);districtGlow.intensity=0;startFlight(new THREE.Vector3(overviewX,3,0),2.5);
+  function reset(){touring=false;tourPaused=false;active=null;adventureAssets.setActive(null);districtGlow.intensity=0;startFlight(new THREE.Vector3(overviewX,3,0),2.5,1);
     nameNodes.forEach(b=>b.setAttribute('aria-pressed','false'));}
   function zoom(delta){const fit=fitRadius();orbit.rDesired=THREE.MathUtils.clamp(orbit.rDesired+delta,Math.max(49,fit*.58),Math.max(146,fit*1.55));}
   const TOUR_STOP_SECONDS=5.7;
@@ -395,13 +395,12 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
     });
   }
   function tick(time){if(disposed)return;raf=requestAnimationFrame(tick);if(!run)return;const dt=Math.min(.045,(time-last)/1000||.016);last=time;
-    if(touring){tourT+=dt/32;if(tourT>=1){tourT=1;touring=false;}
-      traveler.position.copy(curve.getPointAt(Math.min(tourT,.9999)));const point=curve.getPointAt(Math.min(tourT,.9999));
-      orbit.target.copy(point).add(new THREE.Vector3(0,2,0));orbit.rDesired=Math.max(55,fitRadius()*.65);orbit.thetaDesired=.35;orbit.phiDesired=.96;
-      const idx=Math.min(districts.length-1,Math.floor(tourT*districts.length));
-      if(idx!==tourIndex){tourIndex=idx;active=districts[idx].id;onSelect(active,{fromTour:true});}
-      if(!touring){orbit.rDesired=85;}
-    } else if(animate){traveler.position.copy(curve.getPointAt((time*.000012)%1));}
+    if(touring&&!tourPaused){
+      tourElapsed+=dt;tourNotice+=dt;
+      if(tourElapsed>=TOUR_STOP_SECONDS)advanceTour(tourIndex+1);
+      else if(tourNotice>=.16){tourNotice=0;announceTour();}
+    }
+    if(animate&&!touring)traveler.position.copy(curve.getPointAt((time*.000012)%1));
     districtModels.forEach((obj,id)=>{const next=id===active?1.055:1;const value=obj.scale.x+(next-obj.scale.x)*.085;obj.scale.setScalar(value);});
     if(introState.active){
       // A single continuous camera trajectory from clear sky, through the cloud
@@ -411,6 +410,18 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
       bezierInto(introCameraPoint,p,startEye,new THREE.Vector3(-5,119,126),new THREE.Vector3(14,71,117),endEye);
       bezierInto(introLookPoint,p,startTarget,new THREE.Vector3(0,116,-36),new THREE.Vector3(0,12,4),new THREE.Vector3(overviewX,3,0));
       camera.position.copy(introCameraPoint);camera.lookAt(introLookPoint);
+    }else if(flight){
+      flight.elapsed=Math.min(flight.duration,flight.elapsed+dt);
+      const p=easeJourney(Math.min(1,flight.elapsed/flight.duration));
+      camera.position.copy(flight.eyeCurve.getPoint(p));
+      flight.currentLook.copy(flight.fromLook).lerp(flight.toLook,p);
+      camera.lookAt(flight.currentLook);
+      if(sparkPath)flightSpark.position.copy(sparkPath.getPoint(p));
+      if(flight.elapsed>=flight.duration){
+        camera.position.copy(flight.toEye);camera.lookAt(flight.toLook);
+        orbit.focus.copy(flight.toLook);flight=null;
+        flightRibbon.visible=false;flightSpark.visible=false;
+      }
     }else{
       const easing=animate?.07:1;
       orbit.theta=THREE.MathUtils.lerp(orbit.theta,orbit.thetaDesired,easing);
@@ -439,5 +450,5 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   function visibility(){run=!document.hidden;last=performance.now();}
   document.addEventListener('visibilitychange',visibility);
   raf=requestAnimationFrame(tick);
-  return {focus,reset,zoom,startTour,stopTour,setMotion,setIntroProgress,endIntro,detailCounts:{...storyDetails.counts,adventureOutposts:adventureAssets.outpostCount},dispose(){adventureAssets.dispose();storyDetails.dispose();disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
+  return {focus,reset,zoom,startTour,stopTour,pauseTour,nextTourStop,setMotion,setIntroProgress,endIntro,detailCounts:{...storyDetails.counts,adventureOutposts:adventureAssets.outpostCount},dispose(){adventureAssets.dispose();storyDetails.dispose();disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
 }
