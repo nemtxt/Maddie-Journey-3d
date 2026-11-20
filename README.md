@@ -1,6 +1,6 @@
 # Maddie Journey — Interactive 3D World
 
-**V1.6 · Adventure Journey Edition · November 2026**
+**V1.7 · The Expedition System · November 2026**
 
 An Awwwards-inspired, interactive miniature world for exploring the Maddie Journey People & Culture reporting environment. This project is deliberately **separate from** [the original fictional prototype](https://github.com/nemtxt/Maddie-Journey-Prototype), which has not been changed.
 
@@ -13,6 +13,19 @@ The default root / `#overview` opens a full-screen, atmospheric sky with animate
 **Accessibility and graceful fallbacks:** Skip intro is always available; reduced-motion visitors transition directly to the world; the camera descent uses requestAnimationFrame if GSAP fails to load; an existing 2D fallback is shown if WebGL fails. Deep links into employee and report routes bypass the entrance. Controls remain keyboard navigable.
 
 **Dependencies:** Three.js 0.161.0 and GSAP 3.12.5 are served from jsDelivr; no account, billing, server-side rendering or paid animation plugins are required. A network connection is needed to load these libraries.
+
+## V1.7 — The Expedition System
+
+The **eight company divisions** are now connected by an expedition workflow while remaining separate from the nine original reporting workspaces and 51 fictional employee records.
+
+- **Reliable intro recovery:** The welcome screen has an independent 11-second watchdog that completes the island reveal when GSAP/WebGL animation stalls. A missing renderer falls back to the accessible 2D world and the original fictional dashboard link. Skip Intro always remains available and audio stays opt-in.
+- **Cinematic fly-to:** Selecting a division initiates a curved, eased camera transition above the island, with a short illuminated route ribbon and moving travel spark. Orbit, wheel zoom and touch dragging can interrupt the journey; reduced-motion mode skips animated travel.
+- **Guided eight-stop expedition:** An automatically advancing tour visits HR, Revenue Management, Design, Corporate Operations, Media, IT, GenCon and Business Development in that order. A compact progress bar and Pause/Resume, Next Stop and Exit controls remain available throughout. Dragging or scrolling interrupts guided travel rather than trapping the user.
+- **Fast-travel field map:** A small, dismissible overlay derives its eight marker coordinates from the actual district coordinates in `divisions.js`. Map pins are real buttons with accessible division names. The route and selected stop are visually highlighted. The map remains usable in the 2D and reduced-motion fallbacks.
+- **Contextual fictional reports:** A slim field-notes panel appears at each destination with up to three relevant report titles. Its links are selected directly from the unchanged `data/mock-data-manifest.json` inventory, never synthesized or claimed to be live data. Users can enter the corresponding preserved report or workspace.
+- **Accessibility/performance:** All navigation is keyboard-accessible, overlays can be dismissed with Escape, motion remains optional, and the original full-viewport 3D scene and mobile-responsive layout are preserved.
+
+**Technical files:** `expedition-system.js` provides pure map and report-reference functions; `app.js` owns user navigation and widgets; `world.js` owns the camera route, tour progression and visual path. `index.html` and `styles.css` define compact expedition controls. Source regression tests assert all 86 report routes and preserve the 51-person fictional snapshot. The Chromium workflow checks the Start transition, map, report preview and guided eight-stop controls.
 
 ## V1.6 — Adventure Journey Expedition
 
