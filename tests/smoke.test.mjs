@@ -183,7 +183,7 @@ test('Dream Factory-informed details are original procedural scenery and preserv
  assert.ok(scenic.includes("lowQuality?2:4"));
  assert.ok(!scenic.includes("sketchfab.com/"));
  assert.ok(!scenic.includes("hkdi.edu.hk/dreamfactory/assets"));
- assert.ok(app.includes("world.js?v=1.6.0"));
+ assert.ok(app.includes("world.js?v=1.7.0"));
  assert.equal(snapshot.people.length,51);
  assert.equal(manifest.workspaces.length,9);
  assert.equal(manifest.workspaces.reduce((sum,w)=>sum+w.sections.length,0),86);
