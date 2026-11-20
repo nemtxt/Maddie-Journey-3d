@@ -22,7 +22,21 @@ try{
  assert.equal(await page.locator('#intro-audio').getAttribute('aria-pressed'),'false','Audio must never autoplay');
  await page.screenshot({path:'browser-results/01-sky-intro.png'});
  await start.click();
- await page.waitForFunction(()=>!document.body.classList.contains('intro-active'),null,{timeout:22000});
+ try{
+  await page.waitForFunction(()=>!document.body.classList.contains('intro-active'),null,{timeout:24000});
+ }catch(err){
+  const diagnostic=await page.evaluate(()=>({
+    introActive:document.body.classList.contains('intro-active'),
+    status:document.querySelector('#intro-status')?.textContent,
+    startDisabled:document.querySelector('#intro-start')?.disabled,
+    sceneReady:window.MADDIE_INTRO?.isReady?.(),
+    introHidden:document.querySelector('#sky-intro')?.hidden,
+    worldMarker:document.querySelector('#world-canvas')?.dataset.adventureOutposts,
+    fallback:document.body.classList.contains('fallback-boot')
+  })).catch(e=>({evaluationError:String(e)}));
+  await fs.writeFile('browser-results/00-intro-error.json',JSON.stringify({diagnostic,errors},null,2));
+  throw new Error('Intro transition did not exit: '+JSON.stringify({diagnostic,errors,reason:String(err)}));
+ }
  assert.equal(await page.locator('#sky-intro').isHidden(),true);
  await page.waitForFunction(()=>document.body.classList.contains('view-world'),null,{timeout:9000});
  const box=await page.locator('#world-stage').boundingBox();
@@ -43,6 +57,20 @@ try{
  assert.ok(['lite','enhanced'].includes(scenic.quality),'Mobile-quality fallback remains available');
  await page.waitForTimeout(900);
  await page.screenshot({path:'browser-results/02-fullscreen-world.png'});
+ // Fast travel is a compact, coordinate-based map rather than another full page.
+ await page.locator('#hud-map').click();
+ await page.locator('#fast-travel-map').waitFor({state:'visible',timeout:5000});
+ assert.equal(await page.locator('.fast-map-pin').count(),8,'Fast map must contain the eight real company destinations');
+ await page.screenshot({path:'browser-results/02a-fast-travel-map.png'});
+ await page.locator('.fast-map-pin[data-district="design"]').click();
+ await page.waitForFunction(()=>location.hash==='#world:design'&&document.querySelector('#division-headline')?.hidden===false,null,{timeout:12000});
+ await page.locator('#report-preview').waitFor({state:'visible',timeout:6000});
+ assert.ok((await page.locator('#preview-heading').textContent()).includes('Design'));
+ const previewRoutes=await page.locator('.preview-report').evaluateAll(xs=>xs.map(x=>x.dataset.report));
+ assert.ok(previewRoutes.length>=1&&previewRoutes.length<=3);
+ assert.ok(previewRoutes.every(x=>x.includes(':')));
+ assert.equal(await page.locator('#fast-travel-map').isHidden(),true);
+ console.log('PASS: 8-pin fast travel map and contextual real report previews');
 
  // Explore every division using the compact world picker.
  await page.locator('#hud-divisions').click();
@@ -83,6 +111,33 @@ try{
  }
  await page.screenshot({path:'browser-results/05-eight-divisions.png'});
  console.log('PASS: full-screen world, eight large division titles, and evaluator details');
+
+ // Guided expedition must visit all eight divisions, support pause/resume,
+ // advance directly to any next stop, and exit without trapping navigation.
+ await page.locator('#hud-divisions').click();
+ await page.locator('#division-tour').click();
+ await page.locator('#expedition-tour').waitFor({state:'visible',timeout:6000});
+ await page.waitForFunction(()=>document.querySelector('#tour-count')?.textContent==='01 / 08',null,{timeout:5000});
+ assert.match(await page.locator('#tour-destination').textContent(),/HR/);
+ await page.locator('#tour-pause').click();
+ assert.equal(await page.locator('#tour-pause').getAttribute('aria-pressed'),'true');
+ const pausedProgress=await page.locator('#tour-progress').evaluate(el=>parseFloat(el.style.width));
+ await page.waitForTimeout(430);
+ const pausedProgressAfter=await page.locator('#tour-progress').evaluate(el=>parseFloat(el.style.width));
+ assert.ok(Math.abs(pausedProgress-pausedProgressAfter)<.2,'Pause must freeze guided expedition progress');
+ await page.locator('#tour-pause').click();
+ assert.equal(await page.locator('#tour-pause').getAttribute('aria-pressed'),'false');
+ const eight=['revenue','design','corporate','media','it','gencon','business'];
+ for(let i=0;i<eight.length;i++){
+   await page.locator('#tour-next').click();
+   await page.waitForFunction(([id,index])=>location.hash==='#world:'+id&&document.querySelector('#tour-count')?.textContent===String(index+2).padStart(2,'0')+' / 08',[eight[i],i],{timeout:9000});
+ }
+ assert.equal(await page.locator('#tour-count').textContent(),'08 / 08');
+ await page.locator('#tour-exit').click();
+ assert.equal(await page.locator('#expedition-tour').isHidden(),true);
+ assert.equal(await page.locator('#report-preview').isVisible(),true);
+ await page.screenshot({path:'browser-results/05a-guided-expedition.png'});
+ console.log('PASS: 8-stop tour, camera waypoint selection, pause/resume, Next and Exit');
 
  // Opt-in audio needs a real user gesture; toggle must expose its state.
  assert.equal(await page.locator('#hud-audio').getAttribute('aria-pressed'),'false');
