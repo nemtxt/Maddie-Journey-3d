@@ -25,7 +25,7 @@ try{
  await page.screenshot({path:'browser-results/01-sky-intro.png'});
  await start.click();
  try{
-  await page.waitForFunction(()=>!document.body.classList.contains('intro-active'),null,{timeout:24000});
+  await page.waitForFunction(()=>!document.body.classList.contains('intro-active'),null,{timeout:24000,polling:300});
  }catch(err){
   const diagnostic=await page.evaluate(()=>({
     introActive:document.body.classList.contains('intro-active'),
@@ -36,8 +36,13 @@ try{
     worldMarker:document.querySelector('#world-canvas')?.dataset.adventureOutposts,
     fallback:document.body.classList.contains('fallback-boot')
   })).catch(e=>({evaluationError:String(e)}));
-  await fs.writeFile('browser-results/00-intro-error.json',JSON.stringify({diagnostic,errors},null,2));
-  throw new Error('Intro transition did not exit: '+JSON.stringify({diagnostic,errors,reason:String(err)}));
+  await fs.writeFile('browser-results/00-intro-diagnostic.json',JSON.stringify({diagnostic,errors,reason:String(err)},null,2));
+  // Software WebGL can starve requestAnimationFrame-based waitForFunction polling
+  // even though the independent intro watchdog has already completed the reveal.
+  if(diagnostic.introActive!==false||diagnostic.introHidden!==true){
+    throw new Error('Intro transition did not exit: '+JSON.stringify({diagnostic,errors,reason:String(err)}));
+  }
+  console.log('PASS: intro exited via recoverable transition despite slow browser polling');
  }
  assert.equal(await page.locator('#sky-intro').isHidden(),true);
  await page.waitForFunction(()=>document.body.classList.contains('view-world'),null,{timeout:9000});
