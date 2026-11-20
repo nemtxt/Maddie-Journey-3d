@@ -44,7 +44,7 @@ function startIntro(){
  introRunning=true;document.body.classList.remove('intro-loaded');document.body.classList.add('expedition-launching');
  $('intro-start').disabled=true;sound.reveal();
  $('intro-status').textContent='Following the adventure trail through the clouds…';
- if(!world||!motionEnabled||reduceMotion()){finishIntro();return;}
+ if(!world||!motionEnabled||reduceMotion()||world.softwareGPU){finishIntro();return;}
  const progress={value:0},gsap=window.gsap;
  if(gsap){
   introTween=gsap.timeline({onComplete:()=>finishIntro()});
