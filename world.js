@@ -44,8 +44,9 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   const gl=renderer.getContext();
   const debugInfo=gl.getExtension('WEBGL_debug_renderer_info');
   const rendererName=debugInfo?String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)||''):'';
-  const lowQuality=window.innerWidth<700||/(swiftshader|llvmpipe|software)/i.test(rendererName);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowQuality?1:window.innerWidth<950?1.25:1.5));
+  const softwareGPU=/(swiftshader|llvmpipe|software)/i.test(rendererName);
+  const lowQuality=window.innerWidth<700||softwareGPU;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,softwareGPU?.65:lowQuality?.85:window.innerWidth<950?1.25:1.5));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.28;
@@ -450,5 +451,5 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   function visibility(){run=!document.hidden;last=performance.now();}
   document.addEventListener('visibilitychange',visibility);
   raf=requestAnimationFrame(tick);
-  return {focus,reset,zoom,startTour,stopTour,pauseTour,nextTourStop,setMotion,setIntroProgress,endIntro,detailCounts:{...storyDetails.counts,adventureOutposts:adventureAssets.outpostCount},dispose(){adventureAssets.dispose();storyDetails.dispose();disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
+  return {focus,reset,zoom,startTour,stopTour,pauseTour,nextTourStop,setMotion,setIntroProgress,endIntro,softwareGPU,detailCounts:{...storyDetails.counts,adventureOutposts:adventureAssets.outpostCount},dispose(){adventureAssets.dispose();storyDetails.dispose();disposed=true;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',visibility);resizeObserver.disconnect();renderer.dispose();labelsRoot.replaceChildren();}};
 }
