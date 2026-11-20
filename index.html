@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1.6.0">
+  <link rel="stylesheet" href="styles.css?v=1.7.0">
 </head>
 <body class="intro-active">
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -30,6 +30,9 @@
           <div class="hud-actions">
             <button type="button" id="hud-search" class="hud-control" aria-label="Search employees, divisions and reports" title="Search (Ctrl+K)">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span>Search</span>
+            </button>
+            <button type="button" id="hud-map" class="hud-control" aria-controls="fast-travel-map" aria-expanded="false" aria-label="Open the eight-division fast travel map" title="Fast travel between eight destinations">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16M15 5v16"/></svg><span>Map</span>
             </button>
             <button type="button" id="hud-reports" class="hud-control" aria-label="Open reporting dashboard" title="View the nine monitoring workspaces">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg><span>Reports</span>
@@ -64,6 +67,41 @@
             <button type="button" class="division-menu-tour" id="division-tour">Guided world journey <span aria-hidden="true">↗</span></button>
           </nav>
         </div>
+
+        <!-- Expedition System: fast-travel map, eight-stop guided journey, and read-only report previews. -->
+        <aside id="fast-travel-map" class="fast-travel-map" aria-label="Fast travel map of the eight company divisions" hidden>
+          <div class="fast-map-header"><span><small>FIELD MAP / 08 WAYPOINTS</small><strong>Choose your destination</strong></span>
+            <button type="button" id="fast-map-close" class="fast-close" aria-label="Close fast travel map">×</button>
+          </div>
+          <div id="fast-map-canvas" class="fast-map-canvas" role="group" aria-label="Select a division from the island map">
+            <svg class="fast-map-routes" viewBox="0 0 100 100" aria-hidden="true" preserveAspectRatio="none">
+              <path id="fast-map-route-path" d="" fill="none" stroke="#dcba80" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/>
+            </svg>
+            <div id="fast-map-pins"></div>
+            <div class="fast-map-compass" aria-hidden="true">N <span>✧</span></div>
+          </div>
+          <div class="fast-map-footer"><span id="fast-map-caption">Select any waypoint to fly there</span>
+            <button type="button" id="fast-map-tour">Tour all eight <span aria-hidden="true">↗</span></button></div>
+        </aside>
+
+        <section id="expedition-tour" class="expedition-tour" aria-label="Guided expedition controls" hidden>
+          <div class="tour-route-heading"><span class="tour-pulse" aria-hidden="true"></span><span><small>GUIDED EXPEDITION</small><strong id="tour-destination">Preparing your route</strong></span>
+            <span id="tour-count" class="tour-count">01 / 08</span></div>
+          <div class="tour-track" aria-hidden="true"><span id="tour-progress"></span></div>
+          <div class="tour-controls">
+            <button type="button" id="tour-pause" aria-pressed="false">Pause journey</button>
+            <button type="button" id="tour-next">Next stop <span aria-hidden="true">↗</span></button>
+            <button type="button" id="tour-exit">Exit tour</button>
+          </div>
+        </section>
+
+        <aside id="report-preview" class="report-preview" aria-label="Related fictional report previews" hidden>
+          <div class="report-preview-heading"><span>EXPEDITION FIELD NOTES</span>
+            <button type="button" id="preview-close" aria-label="Hide report previews">×</button></div>
+          <div class="report-preview-title"><strong id="preview-heading">Explore the reports</strong><small id="preview-description">Read-only fictional dashboard references</small></div>
+          <div id="preview-reports" class="preview-reports"></div>
+          <button type="button" id="preview-open-workspace" class="preview-workspace">Explore monitoring workspaces <span aria-hidden="true">↗</span></button>
+        </aside>
 
         <div class="world-atmosphere" aria-hidden="true"><span class="atmo-light atmo-a"></span><span class="atmo-light atmo-b"></span><span class="world-film-grain"></span></div>
 
@@ -264,6 +302,6 @@
   })();
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script type="module" src="app.js?v=1.6.0"></script>
+  <script type="module" src="app.js?v=1.7.0"></script>
 </body>
 </html>
