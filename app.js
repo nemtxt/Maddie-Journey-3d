@@ -1,5 +1,6 @@
 import {DIVISIONS,divisionForWorkspace} from './divisions.js?v=1.3.0';
 import {createSoundscape} from './soundscape.js?v=1.4.0';
+import {getTourStops,getFastTravelPoints,getPreviewReports} from './expedition-system.js?v=1.7.0';
 const sound=createSoundscape();
 const DISTRICTS=DIVISIONS;
 const ORIGINAL='https://nemtxt.github.io/Maddie-Journey-Prototype/';
@@ -18,6 +19,7 @@ let divisionSummaries=[];
 let manifest={workspaces:[]},world=null,force2D=false,motionEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let peopleSearch='',peopleDivision='all',lastSearchQuery='',currentView='world',selectedDistrict=null;
 let introDone=Boolean(window.MADDIE_INTRO?.dismissed),introRunning=false,introTween=null,introFrame=0,sceneReady=false;
+let tourActive=false,tourPaused=false,previewDismissed=false;
 const reduceMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const showIntroOnEntry=()=>!location.hash||['#overview','#world'].includes(location.hash);
 function finishIntro({focus=true}={}){
@@ -100,7 +102,7 @@ function routeTo(hash){
  else{location.hash='#overview';}
 }
 function showView(view){
- currentView=view;const inWorld=view==='world';document.body.classList.toggle('view-world',inWorld);sound.setWorld(inWorld);if(!inWorld)closeDivisionMenu();$('world-stage').hidden=!inWorld;$('world-stage').style.display=inWorld?'':'none';
+ currentView=view;const inWorld=view==='world';document.body.classList.toggle('view-world',inWorld);sound.setWorld(inWorld);if(!inWorld){closeDivisionMenu();closeFastMap();hideReportPreview();}$('world-stage').hidden=!inWorld;$('world-stage').style.display=inWorld?'':'none';
  $('content-area').hidden=inWorld;$('content-area').style.display=inWorld?'none':'block';
  // Fullscreen world removes the traditional navigation tabs; dashboards retain their own back controls.
  if(!inWorld)world?.stopTour();
@@ -122,12 +124,13 @@ function openDivisionMenu(){
 function clearDistrict(){
  selectedDistrict=null;document.body.classList.remove('has-division-selection');setDetails(false);
  $('division-headline').hidden=true;
+ hideReportPreview();
  world?.reset();
  $('panel-kicker').textContent='DIVISION GUIDE / 01—08';
  $('panel-content').innerHTML='<div class="panel-feature-icon">✳</div><h2>Discover eight division districts.</h2><p>Select a landmark to see its evaluator team, environmental identity and linked monitoring workspaces.</p><div class="guide-divider"></div><p class="small-note">The original nine monitoring workspaces and all fictional reports remain intact.</p>';
  paintStrip();
 }
-function selectDistrict(id,{fromTour=false,fromRoute=false}={}){
+function selectDistrict(id,{fromTour=false,fromRoute=false,fromWorld=false}={}){
  const d=DISTRICTS.find(x=>x.id===id);if(!d)return;
  const previous=selectedDistrict;
  selectedDistrict=d.id;
@@ -153,17 +156,19 @@ function selectDistrict(id,{fromTour=false,fromRoute=false}={}){
  '<button type="button" class="panel-cta" data-workspace="'+safe(related[0]?.id||'people')+'">Explore linked dashboards <span>↗</span></button>'+
  '<p class="panel-qualification">Division contact details are reference assignments, separate from the 51 fictional employee records.</p>';
  if(previous!==d.id)sound.select();
- if(!fromTour)world?.focus(id);
+ if(!fromTour&&!fromWorld)world?.focus(id);
  closeDivisionMenu();
  paintStrip();
- if(!fromTour&&!fromRoute&&location.hash!=='#world:'+id)history.replaceState(null,'','#world:'+id);
+ showReportPreview(d);
+ updateFastMapSelection();
+ if(!fromRoute&&location.hash!=='#world:'+id)history.replaceState(null,'','#world:'+id);
 }
 function paintStrip(){
  document.querySelectorAll('.division-menu-item').forEach(b=>{
   b.setAttribute('aria-pressed',String(b.dataset.district===selectedDistrict));
  });
 }
-function worldSelected(id,flags){selectDistrict(id,{fromTour:Boolean(flags?.fromTour)});}
+function worldSelected(id,flags){selectDistrict(id,{fromTour:Boolean(flags?.fromTour),fromWorld:Boolean(flags?.fromWorld)});}
 function fallback2D(){
  force2D=true;const stage=$('world-stage');stage.classList.add('is-2d');$('world-fallback').hidden=false;$('world-mode').textContent='3D view';$('world-mode').setAttribute('aria-pressed','true');
  const positions=[[31,59],[25,71],[43,77],[56,78],[74,62],[74,75],[59,86],[38,84]];
@@ -392,10 +397,10 @@ async function start(){
  wireEvents();
  try{const [res,snapshot]=await Promise.all([fetch('./data/mock-data-manifest.json',{cache:'no-cache'}),fetch('./data/fictional-snapshot.json',{cache:'no-cache'})]);if(!res.ok||!snapshot.ok)throw new Error('Fictional data unavailable');manifest=await res.json();const demo=await snapshot.json();employees=demo.people||[];divisionSummaries=demo.divisions||[];if(employees.length!==51||divisionSummaries.length!==8)console.warn('Unexpected fictional roster size');}
  catch(e){console.warn(e);$('panel-content').innerHTML='<h2>Data inventory unavailable</h2><p>Serve this project over HTTP to load the original fictional workspace manifest.</p>';}
- renderDivisionMenu();fillSummary();
+ renderDivisionMenu();renderFastMap();fillSummary();
  const labelsRoot=$('landmark-labels');try{
-  const mod=await import('./world.js?v=1.6.0');
-  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,onHover:()=>sound.hover(),motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
+  const mod=await import('./world.js?v=1.7.0');
+  world=mod.createWorld({canvas:$('world-canvas'),labelsRoot,districts:DISTRICTS,onSelect:worldSelected,onHover:()=>sound.hover(),onTourProgress:updateTourProgress,onTourComplete:finishTour,motionEnabled,intro:showIntroOnEntry()&&!introDone&&!window.MADDIE_INTRO?.dismissed});
   if(selectedDistrict)world.focus(selectedDistrict);
  }catch(e){console.warn('3D world unavailable; switching to 2D:',e);fallback2D();}
  sceneReady=true;
