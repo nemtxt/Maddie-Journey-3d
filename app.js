@@ -133,6 +133,7 @@ function clearDistrict(){
 function selectDistrict(id,{fromTour=false,fromRoute=false,fromWorld=false}={}){
  const d=DISTRICTS.find(x=>x.id===id);if(!d)return;
  const previous=selectedDistrict;
+ if(previous!==d.id)previewDismissed=false;
  selectedDistrict=d.id;
  document.body.classList.add('has-division-selection');
  setDetails(false);
@@ -157,7 +158,7 @@ function selectDistrict(id,{fromTour=false,fromRoute=false,fromWorld=false}={}){
  '<p class="panel-qualification">Division contact details are reference assignments, separate from the 51 fictional employee records.</p>';
  if(previous!==d.id)sound.select();
  if(!fromTour&&!fromWorld)world?.focus(id);
- closeDivisionMenu();
+ closeDivisionMenu();closeFastMap();
  paintStrip();
  showReportPreview(d);
  updateFastMapSelection();
@@ -187,6 +188,82 @@ function fillSummary(root){
  $('stat-people').textContent=String(employees.length||manifest.people_count||'—');
  $('stat-districts').textContent=String(DISTRICTS.length).padStart(2,'0');
  $('stat-reports').textContent=String(reportTotal()).padStart(2,'0');
+}
+/* V1.7 Expedition System: map geometry reflects the eight source division positions,
+   while preview report labels are sourced exclusively from the original manifest. */
+function renderFastMap(){
+ const points=getFastTravelPoints(DISTRICTS);
+ $('fast-map-route-path').setAttribute('d',points.map((p,i)=>(i?'L ':'M ')+p.left.toFixed(1)+' '+p.top.toFixed(1)).join(' '));
+ $('fast-map-pins').innerHTML=points.map(p=>
+   '<button type="button" class="fast-map-pin" data-district="'+safe(p.id)+'"'+
+   ' style="--pin:'+safe(p.color)+';left:'+p.left.toFixed(1)+'%;top:'+p.top.toFixed(1)+'%"'+
+   ' aria-label="Fast travel to '+safe(p.name)+'" aria-pressed="false" title="'+safe(p.name)+'">'+
+   '<span>'+String(p.index).padStart(2,'0')+'</span></button>'
+ ).join('');
+ updateFastMapSelection();
+}
+function updateFastMapSelection(){
+ document.querySelectorAll('.fast-map-pin').forEach(pin=>
+   pin.setAttribute('aria-pressed',String(pin.dataset.district===selectedDistrict)));
+ const d=DISTRICTS.find(x=>x.id===selectedDistrict);
+ $('fast-map-caption').textContent=d?'Current stop: '+d.name:'Select any waypoint to fly there';
+}
+function closeFastMap({restoreFocus=false}={}){
+ $('fast-travel-map').hidden=true;
+ $('hud-map').setAttribute('aria-expanded','false');
+ if(restoreFocus)$('hud-map').focus({preventScroll:true});
+}
+function openFastMap(){
+ closeDivisionMenu();
+ $('fast-travel-map').hidden=false;
+ $('hud-map').setAttribute('aria-expanded','true');
+ updateFastMapSelection();
+ $('fast-map-close').focus({preventScroll:true});
+}
+function hideReportPreview(){
+ $('report-preview').hidden=true;
+}
+function showReportPreview(d){
+ if(!d||previewDismissed){hideReportPreview();return;}
+ const reports=getPreviewReports(d,manifest,3);
+ $('preview-heading').textContent=d.name;
+ $('preview-description').textContent='Related fictional report routes — read only';
+ $('preview-reports').innerHTML=reports.length?reports.map(r=>
+   '<button type="button" class="preview-report" data-report="'+safe(r.workspaceId+':'+r.reportId)+'">'+
+   '<span class="preview-report-dot" aria-hidden="true"></span>'+
+   '<span><small>'+safe(r.workspaceName)+'</small><strong>'+safe(r.reportName)+'</strong></span>'+
+   '<span aria-hidden="true">↗</span></button>'
+ ).join(''):'<p class="preview-empty">No report links are available for this destination.</p>';
+ $('preview-open-workspace').dataset.workspace=d.workspaces.find(id=>wspace(id))||'people';
+ $('report-preview').hidden=false;
+}
+function updateTourProgress(progress){
+ tourActive=true;tourPaused=Boolean(progress.paused);
+ $('expedition-tour').hidden=false;
+ $('tour-count').textContent=String(progress.index+1).padStart(2,'0')+' / '+String(progress.count).padStart(2,'0');
+ $('tour-destination').textContent=progress.name;
+ const percentage=Math.min(100,((progress.index+progress.stopProgress)/progress.count)*100);
+ $('tour-progress').style.width=percentage.toFixed(1)+'%';
+ $('tour-pause').textContent=tourPaused?'Resume journey':'Pause journey';
+ $('tour-pause').setAttribute('aria-pressed',String(tourPaused));
+}
+function finishTour({complete=false}={}){
+ tourActive=false;tourPaused=false;
+ $('expedition-tour').hidden=true;
+ $('tour-pause').textContent='Pause journey';
+ $('tour-pause').setAttribute('aria-pressed','false');
+ if(complete){$('tour-destination').textContent='Expedition complete — 08 / 08';sound.reveal();}
+}
+function beginTour(){
+ closeDivisionMenu();closeFastMap();
+ if(!world||force2D||reduceMotion()||!motionEnabled){
+   // Never force camera motion for visitors requesting reduced motion or 2D.
+   openFastMap();
+   $('fast-map-caption').textContent='Choose any destination; guided motion is disabled';
+   return;
+ }
+ previewDismissed=false;
+ world.startTour();sound.reveal();
 }
 function renderDivisionMenu(){
  $('division-menu-list').innerHTML=DISTRICTS.map(d=>'<button type="button" class="division-menu-item" data-district="'+safe(d.id)+'" aria-pressed="false" style="--item-accent:'+safe(d.color)+'">'+
