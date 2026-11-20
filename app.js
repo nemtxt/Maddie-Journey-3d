@@ -34,6 +34,7 @@ function finishIntro({focus=true}={}){
  world?.endIntro();
  if(sceneReady&&!world&&!force2D)fallback2D();
  if(gsap&&allowMotion)gsap.to(reveal,{opacity:1,duration:.85,stagger:.09,ease:'power2.out',clearProps:'opacity'});
+ window.MADDIE_INTRO?.complete?.();
  if(focus&&currentView==='world')$('hud-divisions').focus({preventScroll:true});
 }
 function startIntro(){
