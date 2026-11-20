@@ -4,9 +4,11 @@ import fs from 'node:fs/promises';
 
 const BASE='http://127.0.0.1:8765/';
 await fs.mkdir('browser-results',{recursive:true});
-const browser=await chromium.launch({headless:true,args:[
+const launchOptions={headless:true,args:[
   '--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'
-]});
+]};
+if(process.env.CI_USE_SYSTEM_CHROME==='true')launchOptions.channel='chrome';
+const browser=await chromium.launch(launchOptions);
 try{
  const page=await browser.newPage({viewport:{width:1366,height:768},deviceScaleFactor:1});
  const errors=[];
