@@ -180,7 +180,7 @@
   </dialog>
 
 
-  <!-- Works even if the module or WebGL takes too long to initialize. -->
+  <!-- Independent intro fail-safe: even a slow or broken 3D engine cannot trap visitors. -->
   <script>
   (function(){
     'use strict';
@@ -188,9 +188,10 @@
     var skip=document.getElementById('intro-skip');
     var status=document.getElementById('intro-status');
     var sceneReady=false,handlers=null,pending=false,watchdog=0,closed=false;
+    function clearWatchdog(){if(watchdog){clearTimeout(watchdog);watchdog=0;}}
     function fallback(message){
       if(closed)return;
-      closed=true;pending=false;clearTimeout(watchdog);
+      closed=true;pending=false;clearWatchdog();
       document.body.classList.remove('intro-active');
       document.body.classList.add('view-world','fallback-boot');
       document.getElementById('sky-intro').hidden=true;
@@ -198,45 +199,67 @@
       var world=document.getElementById('world-fallback');
       if(stage)stage.classList.add('is-2d');
       if(world)world.hidden=false;
-      if(!sceneReady){
-        var panel=document.getElementById('panel-content');
-        if(panel){
-          panel.replaceChildren();
-          var heading=document.createElement('h2');heading.textContent='Explore Maddie Journey';
-          var copy=document.createElement('p');copy.textContent=message||'The interactive world is temporarily unavailable. You can still open the original fictional dashboard.';
-          var link=document.createElement('a');link.className='primary-btn';link.textContent='Open fictional dashboard ↗';
-          link.href='https://nemtxt.github.io/Maddie-Journey-Prototype/#overview';link.target='_blank';link.rel='noopener noreferrer';
-          panel.append(heading,copy,link);
-        }
+      var panel=document.getElementById('panel-content');
+      if(panel&&(!sceneReady||!handlers)){
+        panel.replaceChildren();
+        var heading=document.createElement('h2');heading.textContent='Explore Maddie Journey';
+        var copy=document.createElement('p');copy.textContent=message||'3D is temporarily unavailable. You can still access the fictional monitoring dashboard.';
+        var link=document.createElement('a');link.className='primary-btn';link.textContent='Open fictional dashboard ↗';
+        link.href='https://nemtxt.github.io/Maddie-Journey-Prototype/#overview';
+        link.target='_blank';link.rel='noopener noreferrer';
+        panel.append(heading,copy,link);
       }
+    }
+    function emergencyExit(){
+      if(closed||!document.body.classList.contains('intro-active'))return;
+      status.textContent='Opening your expedition with a simplified transition…';
+      try{
+        if(sceneReady&&handlers&&handlers.onSkip){
+          handlers.onSkip();
+          if(document.body.classList.contains('intro-active'))fallback('The scene took too long to reveal. Open the original fictional dashboard.');
+          else{closed=true;clearWatchdog();}
+        }else fallback('The 3D world could not finish loading. The fictional dashboard is still available.');
+      }catch(error){
+        console.warn('Adventure intro recovery',error);
+        fallback('The introduction could not finish. Please use the original dashboard.');
+      }
+    }
+    function armWatchdog(){
+      clearWatchdog();
+      watchdog=setTimeout(emergencyExit,11000);
+    }
+    function begin(){
+      if(closed)return;
+      armWatchdog();
+      if(sceneReady&&handlers){
+        try{handlers.onStart();}catch(error){console.warn('Adventure intro start',error);emergencyExit();}
+        return;
+      }
+      pending=true;start.disabled=true;status.textContent='Preparing the expedition route…';
     }
     window.MADDIE_INTRO={
       get dismissed(){return closed;},
       register:function(onStart,onSkip){handlers={onStart:onStart,onSkip:onSkip};},
       ready:function(){
         if(closed)return;
-        sceneReady=true;status.textContent='Your world is ready.';
-        if(pending){pending=false;clearTimeout(watchdog);handlers&&handlers.onStart();}
+        sceneReady=true;start.disabled=false;status.textContent='Your expedition is ready.';
+        if(pending){pending=false;begin();}
       },
-      fail:function(){sceneReady=true;status.textContent='2D mode is ready.';if(pending){pending=false;clearTimeout(watchdog);handlers&&handlers.onStart();}},
+      fail:function(){
+        if(closed)return;
+        sceneReady=true;start.disabled=false;status.textContent='An accessible 2D expedition is ready.';
+        if(pending){pending=false;begin();}
+      },
+      complete:function(){closed=true;pending=false;clearWatchdog();},
       isReady:function(){return sceneReady;}
     };
-    start.addEventListener('click',function(){
-      if(closed)return;
-      if(sceneReady&&handlers){handlers.onStart();return;}
-      pending=true;start.disabled=true;status.textContent='Opening the world…';
-      clearTimeout(watchdog);
-      watchdog=setTimeout(function(){
-        if(!closed&&!sceneReady){
-          start.disabled=false;
-          fallback('The 3D renderer did not finish loading. Try refreshing, or use the original fictional dashboard.');
-        }
-      },7000);
-    });
+    start.addEventListener('click',begin);
     skip.addEventListener('click',function(){
-      clearTimeout(watchdog);pending=false;
-      if(handlers&&sceneReady){handlers.onSkip();closed=true;}
-      else {fallback('Intro skipped. The fictional dashboard remains available.');if(handlers)handlers.onSkip();}
+      clearWatchdog();pending=false;
+      if(handlers&&sceneReady){
+        try{handlers.onSkip();closed=true;}
+        catch(error){console.warn('Adventure intro skip',error);fallback('Open the original monitoring dashboard.');}
+      }else fallback('Intro skipped. The original fictional dashboard remains available.');
     });
   })();
   </script>
