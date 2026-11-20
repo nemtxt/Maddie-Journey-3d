@@ -370,16 +370,16 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
   }
   const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
   function pick(event){const rect=canvas.getBoundingClientRect();mouse.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const hit=raycaster.intersectObjects(hitTargets,false)[0];if(hit){const id=hit.object.userData.district;focus(id);onSelect(id,{fromWorld:true});}}
-  canvas.addEventListener('pointerdown',e=>{pointer.down=true;pointer.drag=false;pointer.x=e.clientX;pointer.y=e.clientY;pointer.theta=orbit.thetaDesired;pointer.phi=orbit.phiDesired;canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener('pointerdown',e=>{if(touring)stopTour();pointer.down=true;pointer.drag=false;pointer.x=e.clientX;pointer.y=e.clientY;pointer.theta=orbit.thetaDesired;pointer.phi=orbit.phiDesired;canvas.setPointerCapture(e.pointerId);});
   let lastHoveredId=null;
   canvas.addEventListener('pointermove',e=>{if(!pointer.down){const rect=canvas.getBoundingClientRect();mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);
     const hovered=raycaster.intersectObjects(hitTargets,false)[0]?.object.userData.district||null;
     canvas.style.cursor=hovered?'pointer':'grab';
     if(hovered&&hovered!==lastHoveredId)onHover(hovered);
-    lastHoveredId=hovered;return;}const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>6)pointer.drag=true;if(pointer.drag){touring=false;orbit.thetaDesired=pointer.theta-dx*.005;orbit.phiDesired=THREE.MathUtils.clamp(pointer.phi+dy*.004,.46,1.48);}});
+    lastHoveredId=hovered;return;}const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>6)pointer.drag=true;if(pointer.drag){if(flight){flight=null;flightRibbon.visible=false;flightSpark.visible=false;}orbit.thetaDesired=pointer.theta-dx*.005;orbit.phiDesired=THREE.MathUtils.clamp(pointer.phi+dy*.004,.46,1.48);}});
   canvas.addEventListener('pointerup',e=>{if(pointer.down&&!pointer.drag)pick(e);pointer.down=false;});
   canvas.addEventListener('pointercancel',()=>{pointer.down=false;});
-  canvas.addEventListener('wheel',e=>{e.preventDefault();touring=false;zoom(Math.sign(e.deltaY)*6);},{passive:false});
+  canvas.addEventListener('wheel',e=>{e.preventDefault();if(touring)stopTour();flight=null;flightRibbon.visible=false;flightSpark.visible=false;zoom(Math.sign(e.deltaY)*6);},{passive:false});
   function resize(){const width=Math.max(1,stage.clientWidth),height=Math.max(1,stage.clientHeight);camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);if(!active&&!touring)orbit.rDesired=fitRadius();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);resize();
   function updateLabels(){if(introState.active||stage.classList.contains('is-2d'))return;const rect=canvas.getBoundingClientRect();const stageRect=stage.getBoundingClientRect();
@@ -411,7 +411,7 @@ export function createWorld({canvas,labelsRoot,districts,onSelect,onHover=()=>{}
       bezierInto(introLookPoint,p,startTarget,new THREE.Vector3(0,116,-36),new THREE.Vector3(0,12,4),new THREE.Vector3(overviewX,3,0));
       camera.position.copy(introCameraPoint);camera.lookAt(introLookPoint);
     }else if(flight){
-      flight.elapsed=Math.min(flight.duration,flight.elapsed+dt);
+      flight.elapsed=Math.min(flight.duration,flight.elapsed+(touring&&tourPaused?0:dt));
       const p=easeJourney(Math.min(1,flight.elapsed/flight.duration));
       camera.position.copy(flight.eyeCurve.getPoint(p));
       flight.currentLook.copy(flight.fromLook).lerp(flight.toLook,p);
